@@ -1,0 +1,3145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Hardcore Tower Kards Defense</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
+body { background: #0b0f1a; min-height: 100vh; display: flex; justify-content: center; align-items: center; font-family: 'Segoe UI', Roboto, system-ui, sans-serif; }
+
+#splashScreen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0b0f1a; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; transition: opacity 0.8s ease, transform 0.8s ease; }
+#splashScreen.hidden { opacity: 0; transform: scale(1.05); pointer-events: none; }
+#splashScreen .logo { font-size: 5rem; margin-bottom: 12px; animation: splashPulse 1.2s ease-in-out infinite; }
+#splashScreen h1 { color: #d6e2f5; font-size: 2.2rem; font-weight: 700; letter-spacing: 3px; margin-bottom: 4px; text-align: center; }
+#splashScreen .sub { color: #8699bb; font-size: 0.95rem; letter-spacing: 4px; margin-bottom: 28px; }
+#splashScreen .loading-bar { width: 200px; height: 4px; background: #1e2738; border-radius: 4px; overflow: hidden; }
+#splashScreen .loading-bar .fill { width: 0%; height: 100%; background: #6a9a7a; border-radius: 4px; animation: loadFill 1.8s ease-out forwards; }
+@keyframes splashPulse { 0%,100%{ transform: scale(1); } 50%{ transform: scale(1.08); } }
+@keyframes loadFill { 0%{ width: 0%; } 100%{ width: 100%; } }
+
+#welcomeScreen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at center, #131a28 0%, #0b0f1a 100%); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 9998; padding: 20px; overflow-y: auto; }
+#welcomeScreen.visible { display: flex; }
+#welcomeScreen .welcome-title { color: #d6e2f5; font-size: 2rem; font-weight: 700; letter-spacing: 3px; margin-bottom: 6px; text-shadow: 0 4px 20px rgba(106, 154, 122, 0.3); text-align: center; }
+#welcomeScreen .welcome-sub { color: #8699bb; font-size: 0.85rem; letter-spacing: 4px; margin-bottom: 32px; }
+.welcome-options { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; width: 100%; max-width: 900px; }
+.welcome-card { flex: 1; min-width: 220px; max-width: 280px; background: linear-gradient(145deg, #1a2332, #131a28); border-radius: 24px; padding: 26px 20px 22px; border: 2px solid #2d3a4d; text-align: center; transition: all 0.25s ease; box-shadow: 0 12px 32px rgba(0,0,0,0.6); cursor: pointer; }
+.welcome-card:hover { transform: translateY(-6px); border-color: #6a9a7a; box-shadow: 0 20px 40px rgba(0,0,0,0.7), 0 0 40px rgba(106, 154, 122, 0.25); }
+.welcome-card .card-icon { font-size: 2.8rem; display: block; margin-bottom: 12px; }
+.welcome-card .card-title { color: #d6e2f5; font-size: 1.15rem; font-weight: 700; margin-bottom: 8px; letter-spacing: 1px; }
+.welcome-card .card-desc { color: #8699bb; font-size: 0.72rem; line-height: 1.6; margin-bottom: 16px; min-height: 46px; }
+.welcome-card .card-btn { display: inline-block; padding: 9px 22px; border-radius: 40px; font-weight: 600; font-size: 0.82rem; border: none; cursor: pointer; transition: all 0.1s ease; }
+.welcome-card.register-card .card-btn { background: linear-gradient(135deg, #2d5a3a, #4a7a5a); color: #dce6fc; box-shadow: 0 4px 0 #1a3a22; border-bottom: 2px solid #6a9a7a; }
+.welcome-card.code-login-card .card-btn { background: linear-gradient(135deg, #2a3a5a, #4a5a7a); color: #dce6fc; box-shadow: 0 4px 0 #1a1a2a; border-bottom: 2px solid #6a6a9a; }
+.welcome-card.file-login-card .card-btn { background: linear-gradient(135deg, #3a2a5a, #5a4a7a); color: #dce6fc; box-shadow: 0 4px 0 #1a0a2a; border-bottom: 2px solid #8a6aaa; }
+
+.welcome-input-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: none; justify-content: center; align-items: center; z-index: 10050; padding: 20px; overflow-y: auto; }
+.welcome-input-overlay.visible { display: flex; }
+.welcome-input-panel { background: #1a2332; border-radius: 28px; padding: 26px 30px 22px; max-width: 500px; width: 100%; border: 2px solid #4a6a5a; box-shadow: 0 30px 60px rgba(0,0,0,0.8); text-align: center; max-height: 90vh; overflow-y: auto; }
+.welcome-input-panel .panel-icon { font-size: 2.4rem; margin-bottom: 8px; }
+.welcome-input-panel .panel-title { color: #d6e2f5; font-size: 1.25rem; font-weight: 700; margin-bottom: 6px; letter-spacing: 1px; }
+.welcome-input-panel .panel-desc { color: #8699bb; font-size: 0.75rem; margin-bottom: 16px; line-height: 1.5; }
+.welcome-input-panel .panel-input { width: 100%; background: #0f1623; border: 2px solid #2d3a4d; border-radius: 40px; padding: 11px 20px; color: #d6e2f5; font-size: 0.9rem; outline: none; transition: border-color 0.3s; margin-bottom: 10px; }
+.welcome-input-panel .panel-input:focus { border-color: #6a9a7a; }
+.welcome-input-panel .panel-input::placeholder { color: #4a5a6a; }
+.welcome-input-panel .panel-input.code-input { font-family: monospace; font-size: 0.72rem; resize: vertical; min-height: 90px; padding: 10px 16px; line-height: 1.4; }
+.welcome-input-panel .panel-label { display: block; text-align: left; color: #aac8ff; font-size: 0.72rem; margin-bottom: 4px; padding-left: 8px; }
+.welcome-input-panel .panel-error { color: #ff6644; font-size: 0.72rem; min-height: 18px; margin-bottom: 10px; }
+.welcome-input-panel .panel-buttons { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 10px; }
+.welcome-input-panel .panel-btn { padding: 10px 26px; border-radius: 40px; font-weight: 600; font-size: 0.85rem; border: none; cursor: pointer; transition: all 0.1s ease; }
+.welcome-input-panel .panel-btn.primary { background: linear-gradient(135deg, #2d5a3a, #4a7a5a); color: #dce6fc; box-shadow: 0 4px 0 #1a3a22; border-bottom: 2px solid #6a9a7a; }
+.welcome-input-panel .panel-btn.primary:hover { background: linear-gradient(135deg, #3d7a4a, #5a8a6a); }
+.welcome-input-panel .panel-btn.secondary { background: #2a3a4a; color: #dce6fc; box-shadow: 0 4px 0 #0d121f; border-bottom: 2px solid #4a6a7a; }
+.welcome-input-panel .panel-btn.secondary:hover { background: #3a5a6a; }
+
+.file-drop-zone { border: 3px dashed #4a6a5a; border-radius: 20px; padding: 28px 20px; margin: 14px 0; background: #0f1623; transition: all 0.2s ease; cursor: pointer; }
+.file-drop-zone:hover { border-color: #6a9a7a; background: #131f1a; }
+.file-drop-zone.dragover { border-color: #8acc9a; background: #1a2f28; transform: scale(1.02); box-shadow: 0 0 30px rgba(106, 154, 122, 0.3); }
+.file-drop-zone .drop-icon { font-size: 2.8rem; display: block; margin-bottom: 8px; }
+.file-drop-zone .drop-title { color: #d6e2f5; font-size: 0.95rem; font-weight: 600; margin-bottom: 4px; }
+.file-drop-zone .drop-sub { color: #8699bb; font-size: 0.72rem; }
+.file-drop-zone .drop-hint { color: #6a7a8a; font-size: 0.65rem; margin-top: 8px; font-style: italic; }
+
+.save-info-panel { background: #0f1623; border-radius: 18px; padding: 14px 18px; margin: 12px 0; border: 2px solid #4a6a5a; text-align: left; }
+.save-info-panel .si-title { color: #aac8ff; font-size: 0.82rem; font-weight: 700; margin-bottom: 10px; text-align: center; padding-bottom: 8px; border-bottom: 1px solid #2d3a4d; }
+.save-info-panel .si-row { display: flex; justify-content: space-between; padding: 4px 0; color: #d6e2f5; font-size: 0.8rem; }
+.save-info-panel .si-row .si-label { color: #8699bb; }
+.save-info-panel .si-row .si-value { color: #ffd866; font-weight: 600; font-family: monospace; }
+
+#mainMenu { background: #131a28; padding: 20px 26px 26px; border-radius: 40px; box-shadow: 0 20px 40px rgba(0,0,0,0.8); text-align: center; max-width: 980px; width: 100%; display: none; max-height: 95vh; overflow-y: auto; }
+#mainMenu.visible { display: block; }
+
+#mainMenuTopBar { display: flex; align-items: center; justify-content: space-between; background: #0f1623; border-radius: 16px; padding: 8px 14px; margin-bottom: 14px; border: 1px solid #2d3a4d; flex-wrap: wrap; gap: 8px; }
+#mainMenuTopBar .top-left { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+#mainMenuTopBar .account-entry-btn { background: linear-gradient(135deg, #2a4a6a, #3a5a7a); border: none; color: #dce6fc; font-weight: 700; font-size: 0.85rem; padding: 7px 18px; border-radius: 40px; cursor: pointer; box-shadow: 0 3px 0 #1a2a3a; border-bottom: 2px solid #5a7a9a; display: flex; align-items: center; gap: 8px; transition: all 0.1s ease; }
+#mainMenuTopBar .account-entry-btn:hover { background: linear-gradient(135deg, #3a5a7a, #4a6a8a); }
+#mainMenuTopBar .account-entry-btn:active { transform: translateY(3px); box-shadow: 0 0px 0 #1a2a3a; }
+#mainMenuTopBar .account-entry-btn .entry-name { color: #ffd866; font-weight: 700; }
+#mainMenuTopBar .top-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+#mainMenuTopBar .gold-display { color: #ffd866; font-size: 0.9rem; font-weight: 700; font-family: monospace; background: #2a1f0a; padding: 4px 12px; border-radius: 20px; border: 1px solid #8a6a3a; }
+#mainMenuTopBar .quick-action-btn { background: #2a3a4a; border: none; color: #dce6fc; font-weight: 600; font-size: 0.72rem; padding: 4px 12px; border-radius: 40px; cursor: pointer; border-bottom: 2px solid #4a6a7a; transition: all 0.1s ease; }
+#mainMenuTopBar .quick-action-btn:hover { background: #3a5a6a; }
+#mainMenuTopBar .quick-action-btn.shop { background: #3a2a4a; border-bottom-color: #8a5aaa; }
+#mainMenuTopBar .quick-action-btn.shop:hover { background: #4a3a5a; }
+#mainMenuTopBar .quick-action-btn.loadout { background: #4a3a2a; border-bottom-color: #aa7a4a; }
+#mainMenuTopBar .quick-action-btn.loadout:hover { background: #5a4a3a; }
+
+#accountScreen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at center, #131a28 0%, #0b0f1a 100%); z-index: 9996; padding: 20px; overflow-y: auto; flex-direction: column; align-items: center; justify-content: center; }
+#accountScreen.visible { display: flex; }
+#accountScreen .account-screen-inner { background: #131a28; padding: 26px 30px 28px; border-radius: 40px; box-shadow: 0 20px 40px rgba(0,0,0,0.8); max-width: 900px; width: 100%; text-align: center; max-height: 92vh; overflow-y: auto; }
+#accountScreen h2 { color: #d6e2f5; font-size: 1.5rem; margin-bottom: 6px; letter-spacing: 2px; }
+#accountScreen .as-sub { color: #8699bb; font-size: 0.78rem; margin-bottom: 18px; }
+
+.account-profile-card { display: flex; align-items: center; gap: 18px; background: #0f1623; border-radius: 20px; padding: 18px 22px; margin-bottom: 14px; border: 2px solid #2d3a4d; flex-wrap: wrap; }
+.account-profile-card .ap-avatar { font-size: 3.5rem; flex-shrink: 0; background: linear-gradient(135deg, #2a4a3a, #1a2f28); width: 76px; height: 76px; border-radius: 50%; display: flex; justify-content: center; align-items: center; border: 3px solid #4a8a5a; }
+.account-profile-card .ap-info { flex: 1; min-width: 200px; text-align: left; }
+.account-profile-card .ap-name-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
+.account-profile-card .ap-name-input { background: transparent; border: none; border-bottom: 2px solid #4a6a5a; color: #d6e2f5; font-size: 1.3rem; font-weight: 700; padding: 2px 8px; outline: none; min-width: 120px; transition: border-color 0.3s; }
+.account-profile-card .ap-name-input:focus { border-bottom-color: #6a9a7a; }
+.account-profile-card .ap-level-badge { display: inline-flex; align-items: center; gap: 4px; background: linear-gradient(135deg, #ffd866, #ffaa44); color: #0b0f1a; padding: 3px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 800; }
+.account-profile-card .ap-title { color: #aac8ff; font-size: 0.85rem; font-weight: 600; }
+.account-profile-card .ap-stats { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 8px; }
+.account-profile-card .ap-stat { display: flex; align-items: center; gap: 4px; background: #1a2a3a; padding: 4px 12px; border-radius: 20px; border: 1px solid #3f5a7a; font-size: 0.78rem; color: #ffd866; font-weight: 600; }
+.account-profile-card .ap-stat .stat-value { color: #fff; font-family: monospace; }
+.account-exp-block { margin-top: 8px; }
+.account-exp-block .exp-bar-wrap { display: flex; align-items: center; gap: 8px; }
+.account-exp-block .exp-bar-wrap .exp-bar { flex: 1; height: 10px; background: #0f1623; border-radius: 5px; overflow: hidden; border: 1px solid #2d3a4d; }
+.account-exp-block .exp-bar-wrap .exp-bar .exp-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #6a9a7a, #8acc9a); border-radius: 5px; transition: width 0.4s ease; }
+.account-exp-block .exp-bar-wrap .exp-value { color: #b3cbff; font-size: 0.72rem; min-width: 110px; text-align: right; font-family: monospace; }
+
+.account-section { background: #0f1623; border-radius: 18px; padding: 14px 18px; margin-bottom: 14px; border: 1px solid #2d3a4d; text-align: left; }
+.account-section .section-title { color: #aac8ff; font-weight: 700; font-size: 0.95rem; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; padding-bottom: 8px; border-bottom: 1px solid #2d3a4d; }
+.account-section .section-title .count-badge { color: #8acc9a; font-size: 0.75rem; font-weight: 600; }
+
+.achievement-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px; }
+.achievement-item { background: #1a2332; border-radius: 10px; padding: 6px 10px; border: 1px solid #2d3a4d; display: flex; align-items: center; gap: 8px; transition: all 0.2s ease; position: relative; }
+.achievement-item.locked { opacity: 0.45; filter: grayscale(1); }
+.achievement-item.unlocked { border-color: #6a9a7a; background: #1a2f28; box-shadow: 0 0 12px #4a8a5a30; }
+.achievement-item .ach-icon { font-size: 1.3rem; flex-shrink: 0; }
+.achievement-item .ach-info { flex: 1; min-width: 0; }
+.achievement-item .ach-name { color: #d6e2f5; font-size: 0.72rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.achievement-item .ach-desc { color: #6a7a8a; font-size: 0.6rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.achievement-item.unlocked .ach-desc { color: #8acc9a; }
+
+.level-milestones { display: flex; gap: 6px; flex-wrap: wrap; }
+.level-milestones .ms-item { display: flex; align-items: center; gap: 4px; padding: 5px 10px; border-radius: 20px; background: #1a2332; font-size: 0.68rem; color: #6a7a8a; border: 1px solid #2d3a4d; }
+.level-milestones .ms-item.reached { background: linear-gradient(135deg, #2a4a3a, #1a2f28); border-color: #6a9a7a; color: #8acc9a; }
+.level-milestones .ms-item .ms-lv { font-weight: 700; color: #ffd866; }
+
+.account-actions-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px; }
+.account-action-btn { background: #1a2a3a; border: 2px solid #3f5a6a; border-radius: 14px; padding: 12px 14px; color: #dce6fc; font-weight: 600; font-size: 0.82rem; cursor: pointer; transition: all 0.15s ease; display: flex; align-items: center; gap: 8px; text-align: left; }
+.account-action-btn:hover { background: #22323f; border-color: #6a9a7a; transform: translateY(-2px); }
+.account-action-btn .action-icon { font-size: 1.4rem; flex-shrink: 0; }
+.account-action-btn .action-text { flex: 1; }
+.account-action-btn .action-sub { color: #8699bb; font-size: 0.65rem; font-weight: 400; margin-top: 2px; }
+.account-action-btn.save-code { border-color: #4a6a8a; }
+.account-action-btn.save-code:hover { border-color: #6a9aaa; }
+.account-action-btn.export-file { border-color: #3a7aaa; }
+.account-action-btn.export-file:hover { border-color: #5a9aca; }
+.account-action-btn.password-btn { border-color: #8a4a5a; }
+.account-action-btn.password-btn:hover { border-color: #aa6a7a; }
+.account-action-btn.reset-btn { border-color: #6a4a4a; }
+.account-action-btn.reset-btn:hover { border-color: #8a5a5a; }
+
+.account-back-btn { background: #3a3a4a; border: none; color: #dce6fc; font-weight: 600; font-size: 0.88rem; padding: 10px 32px; border-radius: 40px; cursor: pointer; box-shadow: 0 4px 0 #1a1a2a; border-bottom: 2px solid #5a5a7a; transition: all 0.1s ease; margin-top: 4px; }
+.account-back-btn:hover { background: #4a4a6a; }
+.account-back-btn:active { transform: translateY(4px); box-shadow: 0 0px 0 #1a1a2a; }
+
+#mainMenu h1 { font-size: 1.7rem; font-weight: 700; color: #d6e2f5; text-shadow: 0 4px 12px #0a0e16; margin-bottom: 4px; letter-spacing: 1px; }
+#mainMenu .subtitle { color: #8699bb; font-size: 0.78rem; margin-bottom: 14px; letter-spacing: 3px; }
+
+.map-row { display: flex; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; justify-content: center; }
+.map-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; flex: 1; min-width: 400px; max-width: 100%; }
+.map-card { background: #1e2738; border-radius: 14px; padding: 12px 10px 12px; cursor: pointer; border: 2px solid #2d3a4d; transition: all 0.2s ease; text-align: center; }
+.map-card:hover { border-color: #5a7a8a; transform: translateY(-2px); background: #263040; }
+.map-card.selected { border-color: #6a9a7a; background: #1a2f28; box-shadow: 0 0 24px #4a8a5a40; }
+.map-card .map-icon { font-size: 2rem; display: block; margin-bottom: 2px; }
+.map-card .map-name { color: #d6e2f5; font-weight: 600; font-size: 0.88rem; }
+.map-card .map-desc { color: #8699bb; font-size: 0.62rem; margin-top: 2px; }
+.map-card .map-record { color: #ffd866; font-size: 0.6rem; margin-top: 2px; }
+.map-card .map-detail-btn { margin-top: 5px; background: #3a5a4a; border: none; color: #dce6fc; font-weight: 600; font-size: 0.66rem; padding: 3px 12px; border-radius: 40px; cursor: pointer; border-bottom: 2px solid #5a8a6a; }
+.map-card .map-edit-btn { margin-top: 5px; background: #4a3a2a; border: none; color: #dce6fc; font-weight: 600; font-size: 0.66rem; padding: 3px 12px; border-radius: 40px; cursor: pointer; border-bottom: 2px solid #8a7a4a; }
+
+.btn { background: #2d3c58; border: none; color: #dce6fc; font-weight: 600; font-size: 0.78rem; padding: 5px 12px; border-radius: 60px; cursor: pointer; box-shadow: 0 3px 0 #0d121f; transition: all 0.07s ease; border-bottom: 2px solid #5b6f92; }
+.btn:active { transform: translateY(4px); box-shadow: 0 1px 0 #0d121f; }
+.btn:hover { background: #3b4d6e; color: white; }
+.btn.back { background: #3a3a4a; border-bottom-color: #5a5a7a; }
+.btn.shop { background: #2d4a3a; border-bottom-color: #5a8a6a; }
+.btn.shop.active { background: #4a7a5a; box-shadow: 0 0 20px #4a8a5a80; }
+.btn.bag { background: #3a3a5a; border-bottom-color: #6a6a9a; }
+.btn.premium-btn { background: #4a3a1a; border-bottom-color: #aa8844; }
+.btn.card-btn { background: #2a3a4a; border-bottom-color: #6a6aaa; }
+.btn.batch-btn { background: #4a4a2a; border-bottom-color: #aaaa6a; }
+.btn.ammo-btn { background: #2a3a4a; border-bottom-color: #5a7a8a; }
+.btn.robot-btn { background: #2a4a4a; border-bottom-color: #5a8a8a; }
+
+.creative-code-section { margin: 10px 0; border-top: 1px solid #2d3a4d; padding-top: 10px; }
+.creative-code-section .label { color: #aac8ff; font-weight: 600; font-size: 0.82rem; margin-bottom: 6px; display: block; }
+.creative-code-input-group { display: flex; gap: 8px; align-items: center; justify-content: center; flex-wrap: wrap; }
+.creative-code-input-group input { flex: 1; min-width: 160px; background: #0f1623; border: 1px solid #2d3a4d; border-radius: 40px; padding: 8px 16px; color: #d6e2f5; font-size: 0.78rem; font-family: monospace; outline: none; }
+.creative-code-input-group .btn-code-load { background: #4a3a1a; border: none; color: #dce6fc; font-weight: 600; font-size: 0.82rem; padding: 8px 20px; border-radius: 40px; cursor: pointer; border-bottom: 2px solid #aa8844; white-space: nowrap; }
+.map-preview-info { margin-top: 4px; color: #6a8a7a; font-size: 0.72rem; min-height: 18px; }
+
+#editorPanel { display: none; background: #1a2332; border-radius: 20px; padding: 14px 18px 18px; margin-top: 12px; border: 2px solid #4a7a5a; }
+#editorPanel.open { display: block; }
+.editor-toolbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 10px; justify-content: center; }
+.editor-toolbar .btn { background: #2a3a4a; border: none; color: #dce6fc; font-weight: 600; font-size: 0.78rem; padding: 5px 14px; border-radius: 40px; cursor: pointer; border-bottom: 2px solid #4a6a7a; }
+.editor-toolbar .btn.active { background: #4a7a5a; border-bottom-color: #6a9a7a; }
+.editor-toolbar .btn.danger { background: #5a2a2a; border-bottom-color: #8a4a4a; }
+.editor-toolbar .btn-success { background: #2a4a3a; border-bottom-color: #5a8a5a; }
+.editor-canvas-wrap { position: relative; display: inline-block; background: #0f1623; border-radius: 12px; padding: 4px; border: 1px solid #2d3a4d; }
+#editorCanvas { display: block; width: 400px; height: 300px; border-radius: 8px; cursor: crosshair; image-rendering: pixelated; background: #19212e; }
+.editor-info { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; color: #8699bb; font-size: 0.78rem; flex-wrap: wrap; gap: 4px; }
+
+#gameWrapper { display: none; background: #131a28; padding: 16px; border-radius: 32px; box-shadow: 0 20px 40px rgba(0,0,0,0.8); width: fit-content; position: relative; z-index: 1; }
+.game-container { background: #1e2738; border-radius: 20px; padding: 12px; box-shadow: none; position: relative; display: flex; flex-direction: column; }
+canvas#gameCanvas { display: block; margin: 0 auto; width: 800px; height: 600px; border-radius: 12px; background: #19212e; box-shadow: none; image-rendering: pixelated; cursor: crosshair; position: relative; z-index: 0; flex-shrink: 0; }
+.panel { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; padding: 0 4px 0 8px; color: #d6e2f5; flex-wrap: wrap; gap: 6px; position: relative; z-index: 100; }
+.stats { display: flex; gap: 10px; background: #0f1623; padding: 4px 14px 4px 18px; border-radius: 60px; font-size: 0.92rem; flex-wrap: wrap; position: relative; z-index: 100; border: 1px solid #2d3a4d; }
+.stats span { color: #b3cbff; }
+.stats strong { color: #f5f9ff; font-weight: 600; margin-left: 3px; }
+.actions { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; position: relative; z-index: 100; }
+.shop-panel, .bag-panel, .premium-panel, .card-panel { display: none; background: #0f1623; border-radius: 14px; padding: 8px 14px; margin-top: 6px; border: 1px solid #3f506e; flex-wrap: wrap; gap: 8px; align-items: center; position: relative; z-index: 200; }
+.shop-panel.open, .bag-panel.open, .premium-panel.open, .card-panel.open { display: flex; }
+.premium-panel { border: 2px solid #aa8844; background: #1a1a0a; }
+.card-panel { border: 2px solid #6a6aaa; background: #1a1a2a; }
+.shop-item { display: flex; align-items: center; gap: 6px; background: #1a2a3a; padding: 3px 12px 3px 8px; border-radius: 40px; border: 1px solid #3f5a6a; font-size: 0.78rem; }
+.shop-item .tower-icon { font-size: 1rem; }
+.shop-item .price { color: #ffd866; font-weight: 600; font-size: 0.78rem; }
+.shop-item .btn { font-size: 0.68rem; padding: 2px 10px; background: #2d5a3a; border-bottom-color: #5a8a5a; }
+.bag-panel .bag-empty { color: #6a7a8a; font-style: italic; padding: 2px 10px; font-size: 0.78rem; }
+.premium-panel .premium-title { width: 100%; text-align: center; color: #ffaa44; font-weight: 600; font-size: 0.95rem; margin-bottom: 2px; }
+.premium-panel .premium-stats { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.premium-stat { background: #0f1623; border-radius: 10px; padding: 6px 12px; border: 1px solid #3a4a3a; min-width: 80px; text-align: center; }
+.premium-stat .ps-icon { font-size: 1rem; }
+.premium-stat .ps-name { color: #d6e2f5; font-size: 0.72rem; }
+.premium-stat .ps-price { color: #ffd866; font-weight: 600; font-size: 0.88rem; }
+.premium-stat .ps-change { font-size: 0.58rem; }
+.premium-stat .ps-change.up { color: #ff6644; }
+.premium-stat .ps-change.flat { color: #6a7a8a; }
+.card-panel .card-title { width: 100%; text-align: center; color: #aac8ff; font-weight: 600; font-size: 0.95rem; margin-bottom: 2px; }
+.card-panel .card-title .cp-counter { color: #ffd866; }
+.card-panel .card-title .deck-count { color: #8acc9a; margin-left: 6px; }
+.card-grid { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; min-height: 60px; padding: 4px; width: 100%; }
+.card-grid .card-empty { color: #6a7a8a; font-style: italic; padding: 12px; width: 100%; text-align: center; font-size: 0.78rem; }
+.card-slot { background: #0f1623; border-radius: 10px; padding: 6px 8px; border: 2px solid #3a4a5a; min-width: 75px; max-width: 95px; text-align: center; cursor: pointer; transition: all 0.15s; flex: 0 0 auto; position: relative; }
+.card-slot:hover { border-color: #6a8aaa; transform: translateY(-2px); }
+.card-slot.disabled { opacity: 0.4; cursor: not-allowed; }
+.card-slot .card-icon { font-size: 1.3rem; display: block; }
+.card-slot .card-name { color: #d6e2f5; font-size: 0.62rem; font-weight: 600; }
+.card-slot .card-cost { color: #ffd866; font-size: 0.58rem; }
+.mode-indicator { color: #aac8ff; font-size: 0.82rem; padding: 3px 12px; background: #0f1623; border-radius: 40px; border: 1px solid #3f5a7a; }
+
+.toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #1a2f28; color: #d6e2f5; padding: 10px 24px; border-radius: 40px; border: 1px solid #4a8a5a; box-shadow: 0 8px 32px rgba(0,0,0,0.6); font-weight: 500; font-size: 0.88rem; z-index: 10100; opacity: 0; transition: opacity 0.3s ease; pointer-events: none; max-width: 90%; text-align: center; }
+.toast.show { opacity: 1; }
+
+.ach-popup { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px); background: #1a2f28; border: 2px solid #6a9a7a; border-radius: 16px; padding: 12px 24px; box-shadow: 0 12px 40px rgba(0,0,0,0.8); z-index: 10060; opacity: 0; transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55); pointer-events: none; display: flex; align-items: center; gap: 12px; }
+.ach-popup.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+.ach-popup .pop-icon { font-size: 2rem; }
+.ach-popup .pop-title { color: #ffd866; font-weight: 700; font-size: 1rem; margin-bottom: 2px; }
+.ach-popup .pop-desc { color: #aac8ff; font-size: 0.78rem; }
+
+.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: none; justify-content: center; align-items: center; z-index: 10050; padding: 20px; overflow-y: auto; }
+.modal-overlay.visible { display: flex; }
+.modal-panel { background: #1a2332; border-radius: 28px; padding: 24px 28px 24px; max-width: 760px; width: 100%; max-height: 90vh; overflow-y: auto; border: 2px solid #4a6a5a; box-shadow: 0 30px 60px rgba(0,0,0,0.8); }
+.modal-panel .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #2d3a4d; }
+.modal-panel .modal-title { color: #d6e2f5; font-size: 1.25rem; font-weight: 700; }
+.modal-panel .modal-close { background: #3a3a4a; border: none; color: #dce6fc; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-size: 1.1rem; font-weight: 700; display: flex; justify-content: center; align-items: center; position: relative; z-index: 10; }
+.modal-panel .modal-close:hover { background: #5a3a4a; color: #ff8888; }
+
+.shop-header-info { display: flex; align-items: center; justify-content: space-between; background: #0f1623; border-radius: 14px; padding: 10px 16px; margin-bottom: 14px; border: 1px solid #2d3a4d; flex-wrap: wrap; gap: 8px; }
+.shop-header-info .sh-left { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.shop-header-info .sh-gold { color: #ffd866; font-size: 0.92rem; font-weight: 700; display: flex; align-items: center; gap: 6px; }
+.shop-header-info .sh-gold .gold-value { font-family: monospace; font-size: 1.1rem; }
+.shop-header-info .sh-category { display: flex; gap: 6px; flex-wrap: wrap; }
+.shop-header-info .sh-category .cat-btn { background: #1a2a3a; border: 1px solid #3f5a6a; color: #8699bb; padding: 4px 12px; border-radius: 20px; cursor: pointer; font-size: 0.7rem; font-weight: 600; transition: all 0.15s ease; }
+.shop-header-info .sh-category .cat-btn.active { background: #2d5a3a; border-color: #5a8a6a; color: #dce6fc; }
+
+.shop-items-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; }
+.shop-card { background: #1a2a3a; border-radius: 14px; padding: 12px 14px; border: 2px solid #3f5a6a; display: flex; flex-direction: column; gap: 8px; transition: all 0.15s ease; }
+.shop-card:hover { border-color: #5a8a7a; background: #22323f; }
+.shop-card .sc-top { display: flex; align-items: center; gap: 10px; }
+.shop-card .sc-icon { font-size: 2rem; flex-shrink: 0; }
+.shop-card .sc-info { flex: 1; min-width: 0; text-align: left; }
+.shop-card .sc-name { color: #d6e2f5; font-size: 0.88rem; font-weight: 700; }
+.shop-card .sc-desc { color: #8699bb; font-size: 0.62rem; margin-top: 2px; line-height: 1.3; }
+.shop-card .sc-bottom { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.shop-card .sc-price { color: #ffd866; font-size: 0.92rem; font-weight: 700; font-family: monospace; }
+.shop-card .sc-owned { color: #8acc9a; font-size: 0.68rem; background: #1a2f28; padding: 2px 8px; border-radius: 10px; border: 1px solid #4a8a5a; }
+.shop-card .sc-buy-group { display: flex; gap: 4px; align-items: center; }
+.shop-card .sc-buy-btn { background: #2d5a3a; border: none; color: #dce6fc; font-weight: 600; font-size: 0.7rem; padding: 5px 14px; border-radius: 20px; cursor: pointer; border-bottom: 2px solid #5a8a6a; }
+.shop-card .sc-buy-btn:hover { background: #3d7a4a; }
+.shop-card .sc-buy-btn:disabled { background: #2a3a4a; cursor: not-allowed; opacity: 0.5; border-bottom-color: #4a5a6a; }
+.shop-card .sc-qty-btn { background: #3a3a5a; border: none; color: #dce6fc; font-weight: 700; font-size: 0.85rem; width: 26px; height: 26px; border-radius: 50%; cursor: pointer; border-bottom: 2px solid #5a5a8a; display: flex; justify-content: center; align-items: center; }
+.shop-card .sc-qty-input { width: 50px; background: #0f1623; border: 2px solid #3f5a6a; border-radius: 14px; padding: 3px 6px; color: #d6e2f5; font-size: 0.78rem; font-weight: 700; font-family: monospace; outline: none; text-align: center; }
+
+.warehouse-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
+.warehouse-item { background: #1a2a3a; border-radius: 12px; padding: 10px; border: 1px solid #3f5a6a; text-align: center; }
+.warehouse-item .wi-icon { font-size: 1.8rem; display: block; }
+.warehouse-item .wi-name { color: #d6e2f5; font-size: 0.72rem; font-weight: 600; margin-top: 2px; }
+.warehouse-item .wi-count { color: #ffd866; font-size: 0.88rem; font-weight: 700; margin-top: 4px; }
+.warehouse-item .wi-actions { display: flex; gap: 4px; justify-content: center; margin-top: 6px; }
+.warehouse-item .wi-btn { background: #2a4a3a; border: none; color: #dce6fc; font-weight: 600; font-size: 0.62rem; padding: 3px 8px; border-radius: 20px; cursor: pointer; border-bottom: 1px solid #5a8a6a; }
+.warehouse-item .wi-btn.sell { background: #5a3a2a; border-bottom-color: #8a5a4a; }
+.warehouse-empty { color: #6a7a8a; font-style: italic; text-align: center; padding: 40px 20px; font-size: 0.88rem; }
+
+#loadoutScreen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at center, #131a28 0%, #0b0f1a 100%); z-index: 9997; padding: 20px; overflow-y: auto; flex-direction: column; align-items: center; justify-content: center; }
+#loadoutScreen.visible { display: flex; }
+#loadoutScreen .loadout-screen-inner { background: #131a28; padding: 22px 26px 26px; border-radius: 36px; box-shadow: 0 20px 40px rgba(0,0,0,0.8); max-width: 1100px; width: 100%; text-align: center; }
+#loadoutScreen h2 { color: #d6e2f5; font-size: 1.4rem; margin-bottom: 6px; letter-spacing: 2px; }
+#loadoutScreen .lo-sub { color: #8699bb; font-size: 0.75rem; margin-bottom: 16px; }
+.loadout-columns { display: flex; gap: 16px; align-items: stretch; margin-bottom: 16px; min-height: 360px; }
+.loadout-column { flex: 1; background: #0f1623; border-radius: 20px; border: 2px solid #2d3a4d; padding: 14px; display: flex; flex-direction: column; min-width: 0; }
+.loadout-column .col-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid #2d3a4d; }
+.loadout-column .col-header .col-title { color: #aac8ff; font-weight: 700; font-size: 0.95rem; display: flex; align-items: center; gap: 6px; }
+.loadout-column .col-header .col-count { color: #8acc9a; font-size: 0.72rem; font-weight: 600; }
+.loadout-column .col-hint { color: #6a7a8a; font-size: 0.62rem; margin-bottom: 10px; line-height: 1.4; text-align: left; }
+.loadout-column .col-body { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; min-height: 200px; max-height: 340px; padding-right: 4px; }
+.bag-slot-item { background: #1a2a3a; border-radius: 12px; padding: 8px 10px; border: 2px solid #3f5a6a; display: flex; align-items: center; gap: 8px; cursor: grab; transition: all 0.15s ease; position: relative; }
+.bag-slot-item:hover { border-color: #ff6666; background: #2a3a4a; }
+.bag-slot-item .bs-icon { font-size: 1.5rem; flex-shrink: 0; }
+.bag-slot-item .bs-info { flex: 1; min-width: 0; text-align: left; }
+.bag-slot-item .bs-name { color: #d6e2f5; font-size: 0.78rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bag-slot-item .bs-desc { color: #6a7a8a; font-size: 0.58rem; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bag-slot-item .bs-remove { background: #5a2a2a; border: none; color: #ff8888; width: 24px; height: 24px; border-radius: 50%; font-size: 0.8rem; font-weight: 700; cursor: pointer; display: flex; justify-content: center; align-items: center; flex-shrink: 0; }
+.warehouse-slot-item { background: #1a2a3a; border-radius: 12px; padding: 8px 10px; border: 2px solid #3f5a6a; display: flex; align-items: center; gap: 8px; cursor: grab; transition: all 0.15s ease; position: relative; }
+.warehouse-slot-item:hover { border-color: #6a9a7a; background: #22323f; }
+.warehouse-slot-item .ws-icon { font-size: 1.5rem; flex-shrink: 0; }
+.warehouse-slot-item .ws-info { flex: 1; min-width: 0; text-align: left; }
+.warehouse-slot-item .ws-name { color: #d6e2f5; font-size: 0.78rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.warehouse-slot-item .ws-desc { color: #6a7a8a; font-size: 0.58rem; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.warehouse-slot-item .ws-count { color: #ffd866; font-size: 0.82rem; font-weight: 700; background: #2a1f0a; padding: 2px 8px; border-radius: 10px; border: 1px solid #8a6a3a; flex-shrink: 0; }
+.warehouse-slot-item .ws-add { background: #2d5a3a; border: none; color: #dce6fc; width: 24px; height: 24px; border-radius: 50%; font-size: 1rem; font-weight: 700; cursor: pointer; display: flex; justify-content: center; align-items: center; flex-shrink: 0; border-bottom: 2px solid #5a8a6a; }
+.column-empty { color: #4a5a6a; font-style: italic; text-align: center; padding: 30px 10px; font-size: 0.78rem; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.column-empty .ce-icon { font-size: 2rem; opacity: 0.5; }
+.loadout-column.drop-target { border-color: #6a9a7a; box-shadow: 0 0 24px rgba(106, 154, 122, 0.25); background: #131f1a; }
+.loadout-gold-control { display: flex; align-items: center; gap: 10px; justify-content: center; margin-bottom: 16px; padding: 12px 20px; background: #1a1a0a; border-radius: 16px; border: 1px solid #8a6a3a; flex-wrap: wrap; }
+.loadout-gold-control .gc-label { color: #ffd866; font-size: 0.88rem; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+.loadout-gold-control .gc-btn { background: #4a3a1a; border: none; color: #dce6fc; font-weight: 700; font-size: 1rem; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; border-bottom: 2px solid #aa8844; display: flex; justify-content: center; align-items: center; }
+.loadout-gold-control .gc-btn.max { background: #2a4a2a; border-bottom-color: #5a8a5a; width: auto; padding: 0 12px; border-radius: 20px; font-size: 0.72rem; }
+.loadout-gold-control .gc-input { width: 100px; background: #0f1623; border: 2px solid #8a6a3a; border-radius: 20px; padding: 6px 12px; color: #ffd866; font-size: 1rem; font-weight: 700; font-family: monospace; outline: none; text-align: center; }
+.loadout-gold-control .gc-total { color: #6a7a8a; font-size: 0.72rem; }
+.loadout-page-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; position: relative; z-index: 10; }
+.start-loadout-hint { color: #ffd866; font-size: 0.82rem; margin-bottom: 12px; padding: 8px 16px; background: #2a1f0a; border-radius: 12px; border: 1px solid #8a6a3a; display: none; }
+.start-loadout-hint.visible { display: block; }
+.pwd-field { margin-bottom: 12px; }
+.pwd-field .pwd-input { width: 100%; background: #0f1623; border: 2px solid #2d3a4d; border-radius: 40px; padding: 11px 20px; color: #d6e2f5; font-size: 0.88rem; outline: none; transition: border-color 0.3s; }
+.pwd-field .pwd-input:focus { border-color: #6a9a7a; }
+
+.save-code-display { background: #0f1623; border-radius: 14px; padding: 12px 14px; margin: 10px 0; border: 1px solid #2d3a4d; font-family: monospace; font-size: 0.68rem; color: #8acc9a; word-break: break-all; line-height: 1.5; max-height: 120px; overflow-y: auto; text-align: left; }
+.save-code-actions { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 10px; }
+
+@media (max-width: 900px) {
+    .loadout-columns { flex-direction: column; }
+    .loadout-column .col-body { max-height: 240px; }
+}
+@media (max-width:860px) {
+    #mainMenu { padding:14px 10px 18px; border-radius:24px; margin:8px; }
+    .map-grid { grid-template-columns:1fr 1fr; }
+    #gameWrapper { padding:8px; border-radius:20px; }
+    canvas#gameCanvas { width:100%; height:auto; aspect-ratio:800/600; }
+    .panel { flex-direction:column; align-items:stretch; gap:4px; }
+    .stats { justify-content:center; font-size:0.78rem; }
+    .actions { justify-content:center; }
+    #splashScreen .logo { font-size:3rem; }
+    #splashScreen h1 { font-size:1.3rem; }
+    .shop-items-grid { grid-template-columns: 1fr; }
+    #accountScreen .account-screen-inner { padding: 18px 14px 22px; border-radius: 28px; }
+    .account-profile-card { padding: 14px 16px; }
+    .account-profile-card .ap-avatar { width: 60px; height: 60px; font-size: 2.8rem; }
+}
+</style>
+</head>
+<body>
+
+<div id="splashScreen">
+    <div class="logo">⚔️</div>
+    <h1>Hardcore Tower Kards Defense</h1>
+    <div class="sub">— Level 18 · Exclusive Skills —</div>
+    <div class="loading-bar"><div class="fill"></div></div>
+</div>
+
+<div id="welcomeScreen">
+    <div class="welcome-title">⚔️ Welcome to Hardcore Tower Defense</div>
+    <div class="welcome-sub">— Choose your login method —</div>
+    <div class="welcome-options">
+        <div class="welcome-card register-card" id="registerCard">
+            <span class="card-icon">🆕</span>
+            <div class="card-title">Create New Account</div>
+            <div class="card-desc">Start a brand new account<br>Get 20,000 gold + full tower set</div>
+            <button class="card-btn">✨ Register</button>
+        </div>
+        <div class="welcome-card code-login-card" id="codeLoginCard">
+            <span class="card-icon">📋</span>
+            <div class="card-title">Save Code Login</div>
+            <div class="card-desc">Paste a previously copied save code<br>Password required after loading</div>
+            <button class="card-btn">📋 Save Code Login</button>
+        </div>
+        <div class="welcome-card file-login-card" id="fileLoginCard">
+            <span class="card-icon">📂</span>
+            <div class="card-title">Local File Login</div>
+            <div class="card-desc">Upload a .tdsave file<br>Drag & drop or click to select</div>
+            <button class="card-btn">📂 Local File Login</button>
+        </div>
+    </div>
+</div>
+
+<div class="welcome-input-overlay" id="registerOverlay">
+    <div class="welcome-input-panel">
+        <div class="panel-icon">🆕</div>
+        <div class="panel-title">Create New Account</div>
+        <div class="panel-desc">Enter account name and password<br>Get 20,000 gold and full tower set upon registration</div>
+        <label class="panel-label">Account Name</label>
+        <input type="text" class="panel-input" id="registerNameInput" placeholder="Enter name (max 20 chars)" maxlength="20">
+        <label class="panel-label">Password</label>
+        <input type="password" class="panel-input" id="registerPasswordInput" placeholder="Password (default 000000)" maxlength="20">
+        <label class="panel-label">Confirm Password</label>
+        <input type="password" class="panel-input" id="registerPasswordConfirm" placeholder="Re-enter password" maxlength="20">
+        <div class="panel-error" id="registerError"></div>
+        <div class="panel-buttons">
+            <button class="panel-btn secondary" id="registerCancelBtn">✖ Cancel</button>
+            <button class="panel-btn primary" id="registerConfirmBtn">✅ Confirm</button>
+        </div>
+    </div>
+</div>
+
+<div class="welcome-input-overlay" id="codeLoginOverlay">
+    <div class="welcome-input-panel">
+        <div class="panel-icon">📋</div>
+        <div class="panel-title">Save Code Login</div>
+        <div class="panel-desc">Paste your previously copied save code<br>Password required after loading</div>
+        <label class="panel-label">Save Code</label>
+        <textarea class="panel-input code-input" id="codeLoginInput" placeholder="Paste save code here..."></textarea>
+        <div class="panel-error" id="codeLoginError"></div>
+        <div class="panel-buttons">
+            <button class="panel-btn secondary" id="codeLoginCancelBtn">✖ Cancel</button>
+            <button class="panel-btn primary" id="codeLoginNextBtn">➡ Load Save</button>
+        </div>
+    </div>
+</div>
+
+<div class="welcome-input-overlay" id="fileLoginOverlay">
+    <div class="welcome-input-panel">
+        <div class="panel-icon">📂</div>
+        <div class="panel-title">Local File Login</div>
+        <div class="panel-desc">Select or drag a save file (.tdsave.json)<br>Password required after loading</div>
+        <div class="file-drop-zone" id="fileDropZone">
+            <span class="drop-icon">📂</span>
+            <div class="drop-title">Click to select file or drag file here</div>
+            <div class="drop-sub">Supports .tdsave.json / .json format</div>
+            <div class="drop-hint">Save files are generated by "Account Center - Export File"</div>
+        </div>
+        <input type="file" id="fileLoginInput" accept=".json,.tdsave,application/json" style="display:none;">
+        <div class="panel-error" id="fileLoginError"></div>
+        <div class="panel-buttons">
+            <button class="panel-btn secondary" id="fileLoginCancelBtn">✖ Cancel</button>
+        </div>
+    </div>
+</div>
+
+<div class="welcome-input-overlay" id="passwordConfirmOverlay">
+    <div class="welcome-input-panel">
+        <div class="panel-icon">🔑</div>
+        <div class="panel-title">Confirm Password</div>
+        <div class="panel-desc">Save loaded successfully. Enter the account password.</div>
+        <div class="save-info-panel">
+            <div class="si-title">📋 Save Info</div>
+            <div class="si-row"><span class="si-label">Account Name</span><span class="si-value" id="siName">-</span></div>
+            <div class="si-row"><span class="si-label">Level</span><span class="si-value" id="siLevel">-</span></div>
+            <div class="si-row"><span class="si-label">Gold</span><span class="si-value" id="siGold">-</span></div>
+            <div class="si-row"><span class="si-label">Medals</span><span class="si-value" id="siMedals">-</span></div>
+        </div>
+        <label class="panel-label">Password</label>
+        <input type="password" class="panel-input" id="confirmPasswordInput" placeholder="Password (default 000000)" maxlength="20">
+        <div class="panel-error" id="confirmPasswordError"></div>
+        <div class="panel-buttons">
+            <button class="panel-btn secondary" id="confirmPasswordCancelBtn">✖ Cancel</button>
+            <button class="panel-btn primary" id="confirmPasswordConfirmBtn">✅ Confirm Login</button>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast"><span id="toastMsg">Notice</span></div>
+<div class="ach-popup" id="achPopup"><div class="pop-icon" id="achPopupIcon">🏆</div><div><div class="pop-title" id="achPopupTitle">Achievement Unlocked</div><div class="pop-desc" id="achPopupDesc">Description</div></div></div>
+
+<div class="modal-overlay" id="lobbyShopOverlay">
+    <div class="modal-panel">
+        <div class="modal-header">
+            <div class="modal-title">🏪 Lobby Shop</div>
+            <button class="modal-close" id="lobbyShopCloseBtn">✖</button>
+        </div>
+        <div class="shop-header-info">
+            <div class="sh-left">
+                <div class="sh-gold">💰 <span class="gold-value" id="lobbyShopGold">0</span></div>
+                <div class="sh-category" id="shopCategoryTabs">
+                    <button class="cat-btn active" data-cat="all">All</button>
+                    <button class="cat-btn" data-cat="attack">Attack</button>
+                    <button class="cat-btn" data-cat="special">Special</button>
+                    <button class="cat-btn" data-cat="defense">Defense</button>
+                </div>
+            </div>
+        </div>
+        <div class="shop-items-grid" id="lobbyShopGrid"></div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="warehouseOverlay">
+    <div class="modal-panel">
+        <div class="modal-header">
+            <div class="modal-title">📦 Account Warehouse</div>
+            <button class="modal-close" id="warehouseCloseBtn">✖</button>
+        </div>
+        <div class="warehouse-grid" id="warehouseGrid"></div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="changePasswordOverlay">
+    <div class="modal-panel" style="max-width: 440px;">
+        <div class="modal-header">
+            <div class="modal-title">🔑 Change Password</div>
+            <button class="modal-close" id="changePasswordCloseBtn">✖</button>
+        </div>
+        <div class="pwd-field"><label class="panel-label">Current Password</label><input type="password" class="pwd-input" id="oldPasswordInput" placeholder="Enter current password" maxlength="20"></div>
+        <div class="pwd-field"><label class="panel-label">New Password</label><input type="password" class="pwd-input" id="newPasswordInput" placeholder="Enter new password" maxlength="20"></div>
+        <div class="pwd-field"><label class="panel-label">Confirm New Password</label><input type="password" class="pwd-input" id="confirmNewPasswordInput" placeholder="Re-enter new password" maxlength="20"></div>
+        <div class="panel-error" id="changePasswordError" style="text-align:center;"></div>
+        <div class="panel-buttons" style="display:flex; gap:10px; justify-content:center; margin-top:14px;">
+            <button class="panel-btn secondary" id="changePasswordCancelBtn">✖ Cancel</button>
+            <button class="panel-btn primary" id="changePasswordConfirmBtn">✅ Confirm</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="saveCodeOverlay">
+    <div class="modal-panel" style="max-width: 560px;">
+        <div class="modal-header">
+            <div class="modal-title">📋 Save Code</div>
+            <button class="modal-close" id="saveCodeCloseBtn">✖</button>
+        </div>
+        <div style="color:#8699bb; font-size:0.8rem; margin-bottom:10px; text-align:left;">
+            Your save code has been generated. Copy and store it safely to restore this account on any device.
+        </div>
+        <div class="save-code-display" id="saveCodeDisplay">Generating...</div>
+        <div class="save-code-actions">
+            <button class="panel-btn primary" id="copySaveCodeBtn">📋 Copy Save Code</button>
+            <button class="panel-btn secondary" id="downloadSaveCodeBtn">💾 Download as File</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="detailOverlay">
+    <div class="modal-panel" style="max-width: 480px; text-align:center;">
+        <div class="modal-header">
+            <div class="modal-title">🗺️ Map Details</div>
+            <button class="modal-close" id="detailCloseBtn">✖</button>
+        </div>
+        <div id="detailIcon" style="font-size:3rem;">🏜️</div>
+        <div id="detailName" style="color:#d6e2f5; font-size:1.5rem; font-weight:700;">Map Name</div>
+        <div id="detailAuthor" style="color:#6a8a7a; font-size:0.78rem; margin-bottom:10px;">✍️ Unknown Author</div>
+        <div style="background:#0f1623; border-radius:10px; padding:6px; margin-bottom:12px;"><canvas id="detailPreviewCanvas" width="400" height="300" style="width:100%; height:auto; aspect-ratio:4/3; border-radius:6px; display:block;"></canvas></div>
+        <div id="detailDesc" style="color:#aac8ff; font-size:0.88rem;">Map Description</div>
+        <div style="color:#8699bb; font-size:0.78rem; margin-bottom:14px;">Waypoints: <span id="detailWaypointCount">0</span></div>
+        <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+            <button class="btn" id="detailStartBtn" style="background:#2d5a3a;border-bottom-color:#5a8a6a;">⚔️ Start Battle</button>
+            <button class="btn back" id="detailCloseBtn2">✖ Close</button>
+        </div>
+    </div>
+</div>
+
+<div id="loadoutScreen">
+    <div class="loadout-screen-inner">
+        <h2>🎒 Loadout Manager</h2>
+        <div class="lo-sub">Drag towers from warehouse to backpack to load · Drag from backpack to warehouse to unload</div>
+        <div class="start-loadout-hint" id="startLoadoutHint">⚔️ Ready for battle! Equip your loadout, then click "Start Battle"</div>
+        <div class="loadout-columns">
+            <div class="loadout-column" id="bagColumn">
+                <div class="col-header"><span class="col-title">🎒 Backpack (Equipped)</span><span class="col-count" id="bagColCount">0 / 8</span></div>
+                <div class="col-hint">Drag towers to the right to unload · Click ✖ to remove</div>
+                <div class="col-body" id="bagColBody"><div class="column-empty"><span class="ce-icon">🎒</span><span>Backpack is empty</span></div></div>
+            </div>
+            <div class="loadout-column" id="warehouseColumn">
+                <div class="col-header"><span class="col-title">📦 Warehouse</span><span class="col-count" id="whColCount">0 types</span></div>
+                <div class="col-hint">Drag towers to the left backpack to load · Click + to load</div>
+                <div class="col-body" id="whColBody"><div class="column-empty"><span class="ce-icon">📦</span><span>Warehouse is empty</span></div></div>
+            </div>
+        </div>
+        <div class="loadout-gold-control">
+            <span class="gc-label">💰 Carry Gold:</span>
+            <button class="gc-btn" id="goldMinusBtn">−</button>
+            <input class="gc-input" id="goldInput" type="number" value="0" min="0" step="100">
+            <button class="gc-btn" id="goldPlusBtn">+</button>
+            <button class="gc-btn max" id="goldMaxBtn">MAX</button>
+            <span class="gc-total" id="goldTotalHint">(Owned: 0)</span>
+        </div>
+        <div class="loadout-page-actions">
+            <button class="btn shop" id="loadoutPageShopBtn">🏪 Lobby Shop</button>
+            <button class="btn" id="loadoutPageWarehouseBtn" style="background:#2a4a2a;border-bottom-color:#5a8a5a;">📦 Open Warehouse</button>
+            <button class="btn" id="loadoutPageStartBtn" style="background:#2d5a3a;border-bottom-color:#5a8a6a;">⚔️ Start Battle</button>
+            <button class="btn back" id="loadoutPageBackBtn">↩ Back to Main</button>
+        </div>
+    </div>
+</div>
+
+<div id="accountScreen">
+    <div class="account-screen-inner">
+        <h2>👤 Account Center</h2>
+        <div class="as-sub">Manage account info, achievements and saves</div>
+
+        <div class="account-profile-card">
+            <div class="ap-avatar">👤</div>
+            <div class="ap-info">
+                <div class="ap-name-row">
+                    <input class="ap-name-input" id="accountNameInput" placeholder="Enter account name..." maxlength="20">
+                    <span class="ap-level-badge" id="levelBadge">Lv.0</span>
+                    <span class="ap-title" id="levelTitle">Novice</span>
+                </div>
+                <div class="ap-stats">
+                    <span class="ap-stat">💰 <span class="stat-value" id="accountGoldDisplay">0</span></span>
+                    <span class="ap-stat">🏅 <span class="stat-value" id="accountTotalMedals">0</span></span>
+                    <span class="ap-stat">📊 <span class="stat-value" id="accountTotalGames">0</span></span>
+                </div>
+                <div class="account-exp-block">
+                    <div class="exp-bar-wrap">
+                        <span style="color:#6a7a8a; font-size:0.68rem; min-width:36px;">EXP</span>
+                        <div class="exp-bar"><div class="exp-fill" id="expFill"></div></div>
+                        <span class="exp-value" id="expValue">0 / 0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="account-section">
+            <div class="section-title">📈 Level Milestones</div>
+            <div class="level-milestones" id="levelMilestones"></div>
+        </div>
+
+        <div class="account-section">
+            <div class="section-title">🏆 Achievements <span class="count-badge" id="achCount">0 / 0</span></div>
+            <div class="achievement-grid" id="achievementGrid"></div>
+        </div>
+
+        <div class="account-section">
+            <div class="section-title">⚙️ Account Actions</div>
+            <div class="account-actions-grid">
+                <button class="account-action-btn save-code" id="saveCodeBtn">
+                    <span class="action-icon">📋</span>
+                    <div class="action-text">
+                        <div>Save Code</div>
+                        <div class="action-sub">Generate and copy save code</div>
+                    </div>
+                </button>
+                <button class="account-action-btn export-file" id="accountExportFileBtn">
+                    <span class="action-icon">💾</span>
+                    <div class="action-text">
+                        <div>Export File</div>
+                        <div class="action-sub">Download save to computer</div>
+                    </div>
+                </button>
+                <button class="account-action-btn" id="lobbyShopBtn2" style="border-color:#8a5aaa;">
+                    <span class="action-icon">🏪</span>
+                    <div class="action-text">
+                        <div>Lobby Shop</div>
+                        <div class="action-sub">Buy towers into warehouse</div>
+                    </div>
+                </button>
+                <button class="account-action-btn" id="warehouseBtn2" style="border-color:#5a8a5a;">
+                    <span class="action-icon">📦</span>
+                    <div class="action-text">
+                        <div>Account Warehouse</div>
+                        <div class="action-sub">View owned towers</div>
+                    </div>
+                </button>
+                <button class="account-action-btn password-btn" id="changePasswordBtn">
+                    <span class="action-icon">🔑</span>
+                    <div class="action-text">
+                        <div>Change Password</div>
+                        <div class="action-sub">Update account password</div>
+                    </div>
+                </button>
+                <button class="account-action-btn reset-btn" id="accountResetBtn">
+                    <span class="action-icon">🔄</span>
+                    <div class="action-text">
+                        <div>Reset Account</div>
+                        <div class="action-sub">Clear all data</div>
+                    </div>
+                </button>
+            </div>
+        </div>
+
+        <button class="account-back-btn" id="accountBackBtn">↩ Back to Main</button>
+    </div>
+</div>
+
+<div id="mainMenu">
+    <div id="mainMenuTopBar">
+        <div class="top-left">
+            <button class="account-entry-btn" id="accountEntryBtn">
+                <span>👤</span>
+                <span>Account Center</span>
+                <span class="entry-name" id="entryNameDisplay">Player</span>
+            </button>
+        </div>
+        <div class="top-right">
+            <span class="gold-display">💰 <span id="topGoldDisplay">0</span></span>
+            <button class="quick-action-btn shop" id="quickShopBtn">🏪 Shop</button>
+            <button class="quick-action-btn loadout" id="quickLoadoutBtn">🎒 Loadout</button>
+        </div>
+    </div>
+
+    <h1>⚡ Hardcore Tower Kards Defense</h1>
+    <div class="subtitle">— Choose Battlefield & Loadout —</div>
+
+    <div class="map-row">
+        <div class="map-grid" id="mapGrid">
+            <div class="map-card selected" data-map="0"><span class="map-icon">🏜️</span><div class="map-name">Desert Line</div><div class="map-desc">Standard path · Open view</div><div class="map-record" data-record="0">📊 Not played</div><button class="map-detail-btn">📋 Details</button></div>
+            <div class="map-card" data-map="1"><span class="map-icon">🌲</span><div class="map-name">Forest Maze</div><div class="map-desc">Winding · Multiple corners</div><div class="map-record" data-record="1">📊 Not played</div><button class="map-detail-btn">📋 Details</button></div>
+            <div class="map-card" data-map="2"><span class="map-icon">🏔️</span><div class="map-name">Snow Pass</div><div class="map-desc">Narrow passage · Focus fire</div><div class="map-record" data-record="2">📊 Not played</div><button class="map-detail-btn">📋 Details</button></div>
+            <div class="map-card" data-map="3"><span class="map-icon">🌋</span><div class="map-name">Lava Rift</div><div class="map-desc">Dual lanes · Split defense</div><div class="map-record" data-record="3">📊 Not played</div><button class="map-detail-btn">📋 Details</button></div>
+            <div class="map-card" data-map="custom" id="customMapCard"><span class="map-icon">✏️</span><div class="map-name">Custom Map</div><div class="map-desc">Free design · Infinite creativity</div><div class="map-record" data-record="custom">📊 Not played</div><button class="map-edit-btn" id="customEditBtn">✏️ Edit Map</button></div>
+        </div>
+    </div>
+
+    <div class="creative-code-section">
+        <span class="label">🎨 Creative Map Lobby · Enter Map Code</span>
+        <div class="creative-code-input-group">
+            <input type="text" id="creativeCodeInput" placeholder="📂 Paste map code here..." spellcheck="false">
+            <button class="btn-code-load" id="creativeCodeLoadBtn">🎮 Load Map</button>
+        </div>
+        <div class="map-preview-info" id="mapPreviewInfo">Enter a map code and click Load</div>
+    </div>
+
+    <div id="editorPanel">
+        <div class="editor-toolbar">
+            <button class="btn active" id="editorModePath">🛤️ Draw Path</button>
+            <button class="btn" id="editorModeErase">🧹 Erase</button>
+            <button class="btn danger" id="editorClear">🗑️ Clear</button>
+            <button class="btn" id="editorUndo">↩️ Undo</button>
+            <button class="btn btn-success" id="editorStartBtn">⚔️ Start Battle</button>
+        </div>
+        <div class="editor-canvas-wrap"><canvas id="editorCanvas" width="400" height="300"></canvas></div>
+        <div class="editor-info">
+            <span>Path points: <span id="pathCount">0</span></span>
+            <span style="color:#6a7a8a;">Green = path · Must connect start → end</span>
+            <span style="color:#ff8844;" id="editorStatus">Draw a path</span>
+        </div>
+    </div>
+</div>
+
+<div id="gameWrapper">
+    <div class="game-container">
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        <div class="panel">
+            <div class="stats">
+                <div>❤️ <strong id="livesDisplay">20</strong></div>
+                <div>🪙 <strong id="cashDisplay">150</strong></div>
+                <div>🐾 <strong id="waveDisplay">0</strong></div>
+                <div>📦 <strong id="bagCountDisplay">0</strong></div>
+                <div>🎴 <strong id="cpDisplay">12</strong></div>
+                <div>🏅 <strong id="medalDisplay">0</strong></div>
+                <div>🔫 <strong id="ammoDisplay">500</strong></div>
+                <div>🤖 <strong id="robotCountDisplay">0</strong></div>
+            </div>
+            <div class="actions">
+                <span class="mode-indicator" id="modeIndicator">🔧 Deploy Mode</span>
+                <button class="btn robot-btn" id="robotShopBtn">🤖 Robot</button>
+                <button class="btn ammo-btn" id="ammoShopBtn">🔫 Ammo</button>
+                <button class="btn batch-btn" id="batchBtn">📐 Batch</button>
+                <button class="btn shop" id="shopBtn">🏪 Shop</button>
+                <button class="btn premium-btn" id="premiumBtn">📈 Premium</button>
+                <button class="btn card-btn" id="cardBtn">🃏 Cards</button>
+                <button class="btn bag" id="bagBtn">📦 Backpack</button>
+                <button class="btn back" id="backBtn">↩ Back</button>
+                <button class="btn reset" id="restartBtn" style="background:#3f2d3b;border-bottom-color:#8f5a6e;">↺ Restart</button>
+                <button class="btn" id="autoWaveBtn" style="background:#2a4a2a;border-bottom-color:#5a8a5a;">⏸️ Manual Wave</button>
+            </div>
+        </div>
+        <div class="shop-panel" id="shopPanel"></div>
+        <div class="premium-panel" id="premiumPanel"><div class="premium-title">📈 Premium Stats</div><div class="premium-stats" id="premiumStats"></div></div>
+        <div class="card-panel" id="cardPanel"><div class="card-title">🃏 Hand · CP: <span class="cp-counter" id="cpCounter">12</span> | Deck: <span id="deckCount">0</span></div><div class="card-grid" id="cardGrid"></div></div>
+        <div class="bag-panel" id="bagPanel"><span class="bag-empty" id="bagEmptyMsg">Backpack is empty</span><div id="bagSlots" style="display:flex; gap:4px; flex-wrap:wrap;"></div></div>
+    </div>
+</div>
+
+<script>
+(function(){
+'use strict';
+
+const CARD_TYPES = {
+    repair: { id:'repair', icon:'🔧', name:'Emergency Repair', cost:2 },
+    boost: { id:'boost', icon:'⚡', name:'Firepower Boost', cost:3 },
+    shield: { id:'shield', icon:'🛡️', name:'Shield Barrier', cost:4 },
+    slow: { id:'slow', icon:'🧊', name:'Frost Field', cost:3 },
+    bomb: { id:'bomb', icon:'💥', name:'Air Strike', cost:5 },
+    rally: { id:'rally', icon:'🏴', name:'Rallying Call', cost:2 },
+    fortify: { id:'fortify', icon:'🏰', name:'Fortify', cost:3 },
+    snipe: { id:'snipe', icon:'🎯', name:'Snipe', cost:4 },
+    fortification: { id:'fortification', icon:'🧱', name:'Fortification', cost:7 },
+};
+const CARD_LIST = ['repair','boost','shield','slow','bomb','rally','fortify','snipe','fortification'];
+const LEVEL_THRESHOLDS = [0,0,200,1500,4500,10800,28800];
+const LEVEL_TITLES = ['Novice','Apprentice','Veteran','Elite','Master','Legend'];
+const MAX_LOADOUT = 8;
+
+const ACHIEVEMENTS = {
+    first_blood:{icon:'🩸',name:'First Blood',desc:'Kill your first enemy'},
+    first_win:{icon:'🎯',name:'First Victory',desc:'Clear wave 5 for the first time'},
+    wave10:{icon:'🌊',name:'Rising Tide',desc:'Reach wave 10'},
+    wave20:{icon:'🌊',name:'Stormy Seas',desc:'Reach wave 20'},
+    wave30:{icon:'🌊',name:'Infinite Ocean',desc:'Reach wave 30'},
+    first_boss:{icon:'👹',name:'Godslayer',desc:'Defeat your first mini-boss'},
+    big_boss:{icon:'👑',name:'Dragon Slayer',desc:'Defeat your first big boss'},
+    first_medal:{icon:'🏅',name:'Medal of Honor',desc:'Earn your first medal'},
+    medal_10:{icon:'🏅',name:'Medal Collector',desc:'Earn 10 medals total'},
+    medal_50:{icon:'🏅',name:'Medal Master',desc:'Earn 50 medals total'},
+    first_taunt:{icon:'🎯',name:'Decoy Tactics',desc:'Deploy your first taunt tower'},
+    first_robot:{icon:'🤖',name:'Automation',desc:'Buy your first robot'},
+    max_level_tower:{icon:'⭐',name:'Max Level Tower',desc:'Upgrade any tower to level 18'},
+    first_medaled_tower:{icon:'🎖️',name:'Medal Ceremony',desc:'Award your first tower medal'},
+    first_card:{icon:'🃏',name:'Art of Command',desc:'Use your first card'},
+    first_map_clear:{icon:'🗺️',name:'Conqueror',desc:'Clear any map for the first time'},
+    all_maps:{icon:'🌍',name:'World Conqueror',desc:'Play all 4 official maps'},
+    custom_map:{icon:'✏️',name:'Creator',desc:'Play a custom map'},
+    level3:{icon:'📈',name:'Rising Star',desc:'Reach Lv.3'},
+    level5:{icon:'📈',name:'Famous',desc:'Reach Lv.5'},
+    level6:{icon:'📈',name:'Legendary Life',desc:'Reach Lv.6'},
+    rich_man:{icon:'💎',name:'Wealthy',desc:'Reach 5000 gold in one game'},
+    survivor:{icon:'❤️',name:'Immortal',desc:'Keep full lives for 10 waves'},
+    first_shop:{icon:'🛍️',name:'First Purchase',desc:'First purchase in lobby shop'},
+    first_warehouse:{icon:'📦',name:'Ready to Go',desc:'First time using warehouse loadout'},
+};
+
+const TOWER_TYPES = {
+    standard:{name:'Medium Cannon',icon:'🏹',cost:100,sellPrice:50,range:160,damage:22,fireRate:30,color:'#c47a3a',rotateSpeed:(2*Math.PI)/(2*60),maxLevel:18,skillDesc:'⭐ Rapid Fire',category:'attack'},
+    rapid:{name:'Light Cannon',icon:'⚡',cost:125,sellPrice:62,range:140,damage:14,fireRate:14,color:'#c48a3a',rotateSpeed:(2*Math.PI)/(0.91*60),maxLevel:18,skillDesc:'⭐ Barrage Storm',category:'attack'},
+    heavy:{name:'Super Heavy',icon:'💥',cost:190,sellPrice:95,range:190,damage:100,fireRate:180,color:'#6a3a4a',rotateSpeed:(2*Math.PI)/(10*60),maxLevel:18,skillDesc:'⭐ Devastating Blow',category:'attack'},
+    sniper:{name:'Sniper Tower',icon:'🔭',cost:300,sellPrice:150,range:200,damage:120,fireRate:600,color:'#d4a030',rotateSpeed:(2*Math.PI)/(2*60),maxLevel:18,skillDesc:'⭐ Penetrating Shot',category:'attack'},
+    heavyfire:{name:'Heavy Flamethrower',icon:'🔥',cost:380,sellPrice:190,range:180,damage:1,fireRate:1,color:'#ff4400',rotateSpeed:(2*Math.PI)/(10*60),maxLevel:18,skillDesc:'⭐ Burning Path',category:'special'},
+    control:{name:'Crowd Control',icon:'🌀',cost:260,sellPrice:130,range:150,damage:2.5,fireRate:5,color:'#4488ff',rotateSpeed:(2*Math.PI)/(1.5*60),maxLevel:18,skillDesc:'⭐ Time Stop',category:'special'},
+    bomb:{name:'Bomb Tower',icon:'💣',cost:1000,sellPrice:500,range:300,damage:99999,fireRate:1000,color:'#ff4400',rotateSpeed:(2*Math.PI)/(28*60),aoeRadius:180,maxLevel:18,skillDesc:'⭐ Nuke',category:'special'},
+    shield:{name:'Shield Tower',icon:'🛡️',cost:500,sellPrice:250,range:120,damage:0,fireRate:1,color:'#44aacc',rotateSpeed:(2*Math.PI)/(1*60),isShield:true,shieldHp:1000,maxLevel:18,skillDesc:'⭐ Holy Shield',category:'defense'},
+    barrier:{name:'Barricade',icon:'🧱',cost:150,sellPrice:75,range:0,damage:0,fireRate:0,color:'#8a7a5a',rotateSpeed:0,isBarrier:true,hp:910,maxHp:910,maxLevel:0,category:'defense'},
+    spike:{name:'Spike Trap',icon:'🔺',cost:250,sellPrice:125,range:0,damage:1,fireRate:1,color:'#aa6644',rotateSpeed:0,isSpike:true,hp:200,maxHp:200,maxLevel:18,skillDesc:'⭐ Thorn Hell',category:'defense'},
+    taunt:{name:'Taunt Tower',icon:'🎯',cost:80,sellPrice:40,range:0,damage:0,fireRate:0,color:'#cc4488',rotateSpeed:0,isTaunt:true,maxLevel:0,hp:50,maxHp:50,skillDesc:'🎯 Mark Enemy',category:'special'},
+};
+const SHOP_TOWER_KEYS = ['standard','rapid','heavy','sniper','heavyfire','control','bomb','shield','barrier','spike','taunt'];
+
+function createNewAccountData(name, password) {
+    const warehouse = {};
+    warehouse['standard'] = 4;
+    SHOP_TOWER_KEYS.filter(k => k !== 'standard').forEach(k => { warehouse[k] = 1; });
+    return {
+        name: name || 'Player', password: password || '000000',
+        level: 0, exp: 0, totalMedals: 0, totalGames: 0, gold: 20000,
+        mapRecords: {}, saves: {}, achievements: {},
+        warehouse: warehouse, loadout: [], loadoutGold: 0,
+        stats: { totalKills:0, totalBossKills:0, totalBigBossKills:0, totalWaves:0, totalMedalsEarned:0, totalTowersBuilt:0, totalCardsUsed:0, totalMedaledTowers:0, mapsPlayed:[], customMapPlayed:false }
+    };
+}
+
+let accountData = createNewAccountData('', '000000');
+let game = null;
+let autoWaveEnabled = true;
+let pendingStartMap = null;
+let pendingSaveData = null;
+let shopCategory = 'all';
+
+const toast = document.getElementById('toast');
+const toastMsg = document.getElementById('toastMsg');
+let toastTimer = null;
+function showToast(message) {
+    toastMsg.textContent = message;
+    toast.classList.add('show');
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { toast.classList.remove('show'); toastTimer = null; }, 3500);
+}
+
+function safeBind(id, event, handler) {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener(event, handler);
+    else console.warn('⚠️ Element not found:', id);
+}
+
+function encodeAccountData(data) {
+    try { return btoa(unescape(encodeURIComponent(JSON.stringify(data)))); } catch(e) { return null; }
+}
+function decodeAccountData(code) {
+    try { const json = decodeURIComponent(escape(atob(code.trim()))); const data = JSON.parse(json); if (data && typeof data === 'object') return data; return null; } catch(e) { return null; }
+}
+
+function applyAccountData(data) {
+    accountData = data;
+    if (!accountData.mapRecords) accountData.mapRecords = {};
+    if (!accountData.saves) accountData.saves = {};
+    if (accountData.totalMedals === undefined) accountData.totalMedals = 0;
+    if (accountData.totalGames === undefined) accountData.totalGames = 0;
+    if (accountData.level === undefined) accountData.level = 0;
+    if (accountData.exp === undefined) accountData.exp = 0;
+    if (!accountData.achievements) accountData.achievements = {};
+    if (!accountData.stats) accountData.stats = { totalKills:0, totalBossKills:0, totalBigBossKills:0, totalWaves:0, totalMedalsEarned:0, totalTowersBuilt:0, totalCardsUsed:0, totalMedaledTowers:0, mapsPlayed:[], customMapPlayed:false };
+    if (accountData.gold === undefined) accountData.gold = 0;
+    if (!accountData.warehouse) accountData.warehouse = {};
+    if (!accountData.loadout) accountData.loadout = [];
+    if (accountData.loadoutGold === undefined) accountData.loadoutGold = 0;
+    if (!accountData.password) accountData.password = '000000';
+}
+
+function saveAccountLocal() {
+    try {
+        const nameEl = document.getElementById('accountNameInput');
+        if (nameEl) accountData.name = nameEl.value.trim() || accountData.name || 'Player';
+        localStorage.setItem('td_account_data', JSON.stringify(accountData));
+        updateAccountUI(); updateLevelUI(); updateAchievementUI();
+        return true;
+    } catch(e) { return false; }
+}
+
+function loadAccountLocal() {
+    try { const raw = localStorage.getItem('td_account_data'); if (raw) { const parsed = JSON.parse(raw); applyAccountData(parsed); return true; } } catch(e) {}
+    return false;
+}
+
+function unlockAchievement(achId) {
+    if (!accountData.achievements) accountData.achievements = {};
+    if (accountData.achievements[achId]) return false;
+    accountData.achievements[achId] = Date.now();
+    const ach = ACHIEVEMENTS[achId];
+    if (ach) { showAchievementPopup(ach); addExp(50); }
+    saveAccountLocal(); updateAchievementUI();
+    return true;
+}
+
+function showAchievementPopup(ach) {
+    const popup = document.getElementById('achPopup');
+    document.getElementById('achPopupIcon').textContent = ach.icon;
+    document.getElementById('achPopupTitle').textContent = '🏆 Achievement Unlocked: ' + ach.name;
+    document.getElementById('achPopupDesc').textContent = ach.desc;
+    popup.classList.add('show');
+    setTimeout(() => { popup.classList.remove('show'); }, 3500);
+}
+
+function addExp(amount) { if (!accountData) return; accountData.exp = (accountData.exp || 0) + amount; checkLevelUp(); saveAccountLocal(); updateLevelUI(); }
+
+function checkLevelUp() {
+    const oldLevel = accountData.level || 0;
+    let newLevel = oldLevel;
+    for (let lv = 1; lv <= 6; lv++) { if (accountData.exp >= LEVEL_THRESHOLDS[lv]) newLevel = lv; }
+    if (newLevel > oldLevel) {
+        accountData.level = newLevel;
+        showToast('🎉 Level Up! Reached Lv.' + newLevel);
+        if (newLevel >= 3) unlockAchievement('level3');
+        if (newLevel >= 5) unlockAchievement('level5');
+        if (newLevel >= 6) unlockAchievement('level6');
+    }
+}
+
+function getLevelProgress() {
+    const lv = accountData.level || 0;
+    if (lv >= 6) return { current: accountData.exp, max: LEVEL_THRESHOLDS[6], percent: 100 };
+    const cur = lv === 0 ? 0 : LEVEL_THRESHOLDS[lv];
+    const next = LEVEL_THRESHOLDS[lv + 1];
+    return { current: accountData.exp, max: next, percent: Math.min(100, Math.max(0, (accountData.exp - cur) / (next - cur) * 100)) };
+}
+
+function updateLevelUI() {
+    const lv = accountData.level || 0;
+    const lb = document.getElementById('levelBadge'); const lt = document.getElementById('levelTitle');
+    if (lb) lb.textContent = 'Lv.' + lv;
+    if (lt) lt.textContent = lv >= 1 ? LEVEL_TITLES[lv-1] : 'Novice';
+    const prog = getLevelProgress();
+    const ef = document.getElementById('expFill'); const ev = document.getElementById('expValue');
+    if (ef) ef.style.width = prog.percent + '%';
+    if (ev) { if (lv >= 6) ev.textContent = 'MAX (' + accountData.exp + ')'; else ev.textContent = accountData.exp + ' / ' + prog.max; }
+    const msContainer = document.getElementById('levelMilestones');
+    if (msContainer) {
+        msContainer.innerHTML = '';
+        for (let i = 1; i <= 6; i++) {
+            const div = document.createElement('div');
+            div.className = 'ms-item' + (lv >= i ? ' reached' : '');
+            div.innerHTML = '<span class="ms-lv">Lv.' + i + '</span> <span>' + LEVEL_TITLES[i-1] + '</span>';
+            msContainer.appendChild(div);
+        }
+    }
+    updateAccountUI();
+}
+
+function updateAchievementUI() {
+    const grid = document.getElementById('achievementGrid');
+    if (!grid) return;
+    grid.innerHTML = '';
+    const unlocked = accountData.achievements || {};
+    let unlockedCount = 0;
+    for (let achId in ACHIEVEMENTS) {
+        const ach = ACHIEVEMENTS[achId];
+        const isUnlocked = !!unlocked[achId];
+        if (isUnlocked) unlockedCount++;
+        const div = document.createElement('div');
+        div.className = 'achievement-item ' + (isUnlocked ? 'unlocked' : 'locked');
+        div.innerHTML = '<span class="ach-icon">' + ach.icon + '</span><div class="ach-info"><div class="ach-name">' + ach.name + '</div><div class="ach-desc">' + ach.desc + '</div></div>';
+        grid.appendChild(div);
+    }
+    const ac = document.getElementById('achCount');
+    if (ac) ac.textContent = unlockedCount + ' / ' + Object.keys(ACHIEVEMENTS).length;
+}
+
+function updateAccountUI() {
+    const m = document.getElementById('accountTotalMedals');
+    const g = document.getElementById('accountTotalGames');
+    const gold = document.getElementById('accountGoldDisplay');
+    const topGold = document.getElementById('topGoldDisplay');
+    const entryName = document.getElementById('entryNameDisplay');
+    if (m) m.textContent = accountData.totalMedals || 0;
+    if (g) g.textContent = accountData.totalGames || 0;
+    if (gold) gold.textContent = accountData.gold || 0;
+    if (topGold) topGold.textContent = accountData.gold || 0;
+    if (entryName) entryName.textContent = accountData.name || 'Player';
+    updateMapRecordsUI();
+    updateLoadoutPageUI();
+}
+
+function updateMapRecordsUI() {
+    const records = accountData.mapRecords || {};
+    document.querySelectorAll('.map-record').forEach(el => {
+        const mapId = el.dataset.record;
+        const record = records[mapId];
+        if (record && record.waves > 0) {
+            el.textContent = '📊 Best Wave: ' + record.waves + ' 🏅 ' + (record.medals || 0) + ' medals';
+            el.style.color = '#8acc9a';
+        } else { el.textContent = '📊 Not played'; el.style.color = '#6a7a8a'; }
+    });
+}
+
+let dragSourceType = null, dragIndex = -1, dragKey = null;
+
+function updateLoadoutPageUI() { renderBagColumn(); renderWarehouseColumn(); updateGoldControl(); }
+
+function renderBagColumn() {
+    const body = document.getElementById('bagColBody');
+    const countEl = document.getElementById('bagColCount');
+    if (!body) return;
+    const loadout = accountData.loadout || [];
+    if (countEl) countEl.textContent = loadout.length + ' / ' + MAX_LOADOUT;
+    body.innerHTML = '';
+    if (loadout.length === 0) { body.innerHTML = '<div class="column-empty"><span class="ce-icon">🎒</span><span>Backpack is empty</span></div>'; return; }
+    for (let i = 0; i < loadout.length; i++) {
+        const key = loadout[i];
+        const def = TOWER_TYPES[key];
+        if (!def) continue;
+        const div = document.createElement('div');
+        div.className = 'bag-slot-item';
+        div.draggable = true;
+        div.innerHTML = '<span class="bs-icon">' + def.icon + '</span><div class="bs-info"><div class="bs-name">' + def.name + '</div><div class="bs-desc">' + (def.skillDesc || 'Basic tower') + '</div></div><button class="bs-remove">✖</button>';
+        div.addEventListener('dragstart', (e) => { dragSourceType = 'bag'; dragIndex = i; dragKey = key; e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', key); });
+        div.addEventListener('dragend', () => { dragSourceType = null; dragIndex = -1; dragKey = null; document.querySelectorAll('.loadout-column').forEach(c => c.classList.remove('drop-target')); });
+        div.querySelector('.bs-remove').addEventListener('click', (e) => { e.stopPropagation(); removeFromLoadoutByIndex(i); });
+        body.appendChild(div);
+    }
+}
+
+function renderWarehouseColumn() {
+    const body = document.getElementById('whColBody');
+    const countEl = document.getElementById('whColCount');
+    if (!body) return;
+    const wh = accountData.warehouse || {};
+    const entries = Object.entries(wh).filter(([k, v]) => v > 0);
+    if (countEl) countEl.textContent = entries.length + ' types';
+    body.innerHTML = '';
+    if (entries.length === 0) { body.innerHTML = '<div class="column-empty"><span class="ce-icon">📦</span><span>Warehouse is empty</span></div>'; return; }
+    for (let [key, count] of entries) {
+        const def = TOWER_TYPES[key];
+        if (!def) continue;
+        const div = document.createElement('div');
+        div.className = 'warehouse-slot-item';
+        div.draggable = true;
+        div.innerHTML = '<span class="ws-icon">' + def.icon + '</span><div class="ws-info"><div class="ws-name">' + def.name + '</div><div class="ws-desc">' + (def.skillDesc || 'Basic tower') + '</div></div><span class="ws-count">×' + count + '</span><button class="ws-add">+</button>';
+        div.addEventListener('dragstart', (e) => { dragSourceType = 'warehouse'; dragKey = key; e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', key); });
+        div.addEventListener('dragend', () => { dragSourceType = null; dragIndex = -1; dragKey = null; document.querySelectorAll('.loadout-column').forEach(c => c.classList.remove('drop-target')); });
+        div.querySelector('.ws-add').addEventListener('click', (e) => { e.stopPropagation(); loadToLoadout(key); });
+        body.appendChild(div);
+    }
+}
+
+function setupDragDrop() {
+    const bagColumn = document.getElementById('bagColumn');
+    const warehouseColumn = document.getElementById('warehouseColumn');
+    if (bagColumn) {
+        bagColumn.addEventListener('dragover', (e) => { e.preventDefault(); if (dragSourceType === 'warehouse' || dragSourceType === 'bag') { e.dataTransfer.dropEffect = 'move'; bagColumn.classList.add('drop-target'); } });
+        bagColumn.addEventListener('dragleave', (e) => { if (!bagColumn.contains(e.relatedTarget)) bagColumn.classList.remove('drop-target'); });
+        bagColumn.addEventListener('drop', (e) => { e.preventDefault(); bagColumn.classList.remove('drop-target'); if (dragSourceType === 'warehouse' && dragKey) loadToLoadout(dragKey); dragSourceType = null; dragIndex = -1; dragKey = null; });
+    }
+    if (warehouseColumn) {
+        warehouseColumn.addEventListener('dragover', (e) => { e.preventDefault(); if (dragSourceType === 'bag' || dragSourceType === 'warehouse') { e.dataTransfer.dropEffect = 'move'; warehouseColumn.classList.add('drop-target'); } });
+        warehouseColumn.addEventListener('dragleave', (e) => { if (!warehouseColumn.contains(e.relatedTarget)) warehouseColumn.classList.remove('drop-target'); });
+        warehouseColumn.addEventListener('drop', (e) => { e.preventDefault(); warehouseColumn.classList.remove('drop-target'); if (dragSourceType === 'bag' && dragIndex >= 0) removeFromLoadoutByIndex(dragIndex); dragSourceType = null; dragIndex = -1; dragKey = null; });
+    }
+}
+
+function removeFromLoadoutByIndex(index) {
+    const loadout = accountData.loadout || [];
+    if (index < 0 || index >= loadout.length) return;
+    const key = loadout[index];
+    const def = TOWER_TYPES[key];
+    if (!def) return;
+    loadout.splice(index, 1);
+    if (!accountData.warehouse) accountData.warehouse = {};
+    accountData.warehouse[key] = (accountData.warehouse[key] || 0) + 1;
+    saveAccountLocal(); updateLoadoutPageUI();
+    showToast('🎒 Moved ' + def.icon + ' ' + def.name + ' back to warehouse');
+}
+
+function loadToLoadout(key) {
+    const wh = accountData.warehouse || {};
+    if (!wh[key] || wh[key] <= 0) { showToast('❌ Tower not in warehouse'); return; }
+    const loadout = accountData.loadout || [];
+    if (loadout.length >= MAX_LOADOUT) { showToast('❌ Loadout full'); return; }
+    wh[key]--; loadout.push(key);
+    accountData.warehouse = wh; accountData.loadout = loadout;
+    if (!accountData.achievements.first_warehouse) unlockAchievement('first_warehouse');
+    saveAccountLocal(); updateLoadoutPageUI();
+    showToast('🎒 Added to loadout');
+}
+
+function updateGoldControl() {
+    const input = document.getElementById('goldInput');
+    const totalHint = document.getElementById('goldTotalHint');
+    if (!input || !totalHint) return;
+    input.value = accountData.loadoutGold || 0;
+    input.max = accountData.gold || 0;
+    totalHint.textContent = '(Owned: ' + (accountData.gold || 0) + ')';
+}
+
+function setLoadoutGold(value) {
+    const maxGold = accountData.gold || 0;
+    let num = parseInt(value);
+    if (isNaN(num)) num = 0;
+    num = Math.max(0, Math.min(maxGold, num));
+    accountData.loadoutGold = num;
+    saveAccountLocal(); updateGoldControl();
+}
+
+function renderLobbyShop() {
+    const grid = document.getElementById('lobbyShopGrid');
+    if (!grid) return;
+    const goldEl = document.getElementById('lobbyShopGold');
+    if (goldEl) goldEl.textContent = accountData.gold || 0;
+    grid.innerHTML = '';
+    const wh = accountData.warehouse || {};
+    let keys = SHOP_TOWER_KEYS.slice();
+    if (shopCategory !== 'all') keys = keys.filter(k => TOWER_TYPES[k] && TOWER_TYPES[k].category === shopCategory);
+    for (let key of keys) {
+        const def = TOWER_TYPES[key];
+        if (!def) continue;
+        const owned = wh[key] || 0;
+        const canAfford = (accountData.gold || 0) >= def.cost;
+        const div = document.createElement('div');
+        div.className = 'shop-card';
+        div.innerHTML = '<div class="sc-top"><span class="sc-icon">' + def.icon + '</span><div class="sc-info"><div class="sc-name">' + def.name + '</div><div class="sc-desc">' + (def.skillDesc || 'Basic tower') + '</div></div></div><div class="sc-bottom"><div><span class="sc-price">💰 ' + def.cost + '</span>' + (owned > 0 ? '<span class="sc-owned" style="margin-left:8px;">Owned ×' + owned + '</span>' : '') + '</div><div class="sc-buy-group"><button class="sc-qty-btn" data-action="minus">−</button><input class="sc-qty-input" type="number" value="1" min="1" max="99"><button class="sc-qty-btn" data-action="plus">+</button><button class="sc-buy-btn" data-key="' + key + '"' + (canAfford ? '' : ' disabled') + '>Buy</button></div></div>';
+        grid.appendChild(div);
+        const qtyInput = div.querySelector('.sc-qty-input');
+        div.querySelector('[data-action="minus"]').addEventListener('click', () => { let v = parseInt(qtyInput.value) || 1; qtyInput.value = Math.max(1, v - 1); });
+        div.querySelector('[data-action="plus"]').addEventListener('click', () => { let v = parseInt(qtyInput.value) || 1; qtyInput.value = Math.min(99, v + 1); });
+        div.querySelector('.sc-buy-btn').addEventListener('click', () => { const qty = Math.max(1, Math.min(99, parseInt(qtyInput.value) || 1)); buyFromLobbyShop(key, qty); });
+    }
+}
+
+function buyFromLobbyShop(key, qty) {
+    qty = qty || 1;
+    const def = TOWER_TYPES[key];
+    if (!def) return;
+    const totalCost = def.cost * qty;
+    if ((accountData.gold || 0) < totalCost) { showToast('❌ Not enough gold! Need ' + totalCost + '💰'); return; }
+    accountData.gold -= totalCost;
+    if (!accountData.warehouse) accountData.warehouse = {};
+    accountData.warehouse[key] = (accountData.warehouse[key] || 0) + qty;
+    if (!accountData.achievements.first_shop) unlockAchievement('first_shop');
+    saveAccountLocal(); renderLobbyShop();
+    if (document.getElementById('warehouseOverlay').classList.contains('visible')) renderWarehousePopup();
+    if (document.getElementById('loadoutScreen').classList.contains('visible')) updateLoadoutPageUI();
+    showToast('✅ Purchased ' + def.icon + ' ' + def.name + ' ×' + qty + ' (cost ' + totalCost + '💰)');
+}
+
+function renderWarehousePopup() {
+    const grid = document.getElementById('warehouseGrid');
+    if (!grid) return;
+    grid.innerHTML = '';
+    const wh = accountData.warehouse || {};
+    const entries = Object.entries(wh).filter(([k, v]) => v > 0);
+    if (entries.length === 0) { grid.innerHTML = '<div class="warehouse-empty">📦 Warehouse is empty</div>'; return; }
+    for (let [key, count] of entries) {
+        const def = TOWER_TYPES[key];
+        if (!def) continue;
+        const div = document.createElement('div');
+        div.className = 'warehouse-item';
+        div.innerHTML = '<span class="wi-icon">' + def.icon + '</span><div class="wi-name">' + def.name + '</div><div class="wi-count">×' + count + '</div><div class="wi-actions"><button class="wi-btn load-btn">Load</button><button class="wi-btn sell">Sell</button></div>';
+        grid.appendChild(div);
+        div.querySelector('.load-btn').addEventListener('click', () => { loadToLoadout(key); renderWarehousePopup(); });
+        div.querySelector('.sell').addEventListener('click', () => { sellFromWarehouse(key); });
+    }
+}
+
+function sellFromWarehouse(key) {
+    const wh = accountData.warehouse || {};
+    if (!wh[key] || wh[key] <= 0) return;
+    const def = TOWER_TYPES[key];
+    if (!def) return;
+    const sellPrice = def.sellPrice || Math.floor(def.cost * 0.5);
+    if (!confirm('Sell 1 ' + def.icon + ' ' + def.name + ' for ' + sellPrice + ' 💰?')) return;
+    wh[key]--;
+    accountData.gold = (accountData.gold || 0) + sellPrice;
+    saveAccountLocal(); renderWarehousePopup();
+    if (document.getElementById('lobbyShopOverlay').classList.contains('visible')) renderLobbyShop();
+    showToast('💰 Sold ' + def.name + ' +' + sellPrice + ' gold');
+}
+
+function exportAccountToFile() {
+    const nameEl = document.getElementById('accountNameInput');
+    if (nameEl) accountData.name = nameEl.value.trim() || accountData.name || 'Player';
+    saveAccountLocal();
+    const dataStr = JSON.stringify(accountData, null, 2);
+    const blob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const safeName = (accountData.name || 'player').replace(/[\\/:*?"<>|]/g, '_');
+    const dateStr = new Date().toISOString().slice(0, 10);
+    a.href = url; a.download = 'HTKD_save_' + safeName + '_' + dateStr + '.tdsave.json';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    showToast('💾 Save downloaded: ' + a.download);
+}
+
+function showSaveCode() {
+    const nameEl = document.getElementById('accountNameInput');
+    if (nameEl) accountData.name = nameEl.value.trim() || accountData.name || 'Player';
+    saveAccountLocal();
+    const code = encodeAccountData(accountData);
+    if (!code) { showToast('❌ Failed to generate save code'); return; }
+    const display = document.getElementById('saveCodeDisplay');
+    if (display) display.textContent = code;
+    document.getElementById('saveCodeOverlay').classList.add('visible');
+}
+
+function copySaveCode() {
+    const display = document.getElementById('saveCodeDisplay');
+    if (!display) return;
+    const code = display.textContent;
+    if (!code || code === 'Generating...') { showToast('❌ Save code not ready'); return; }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(code).then(() => { showToast('📋 Save code copied to clipboard!'); }).catch(() => fallbackCopy(code));
+    } else fallbackCopy(code);
+}
+
+function fallbackCopy(text) {
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); showToast('📋 Save code copied to clipboard!'); } catch(e) { showToast('❌ Copy failed'); }
+    document.body.removeChild(ta);
+}
+
+function downloadSaveCode() {
+    const display = document.getElementById('saveCodeDisplay');
+    if (!display) return;
+    const code = display.textContent;
+    if (!code || code === 'Generating...') { showToast('❌ Save code not ready'); return; }
+    const blob = new Blob([code], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const safeName = (accountData.name || 'player').replace(/[\\/:*?"<>|]/g, '_');
+    a.href = url; a.download = 'save_code_' + safeName + '.txt';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    showToast('💾 Save code downloaded as file');
+}
+
+const LAVA_WAYPOINTS_TOP = [{x:0,y:3},{x:4,y:3},{x:4,y:7},{x:8,y:7},{x:8,y:3},{x:12,y:3},{x:12,y:11},{x:16,y:11},{x:16,y:5},{x:19,y:5}];
+const LAVA_WAYPOINTS_BOTTOM = [{x:0,y:11},{x:5,y:11},{x:5,y:7},{x:9,y:7},{x:9,y:11},{x:13,y:11},{x:13,y:3},{x:17,y:3},{x:17,y:9},{x:19,y:9}];
+const MAP_META = {
+    0: { icon: '🏜️', name: 'Desert Line', desc: 'Standard path · Open view', author: 'Official Map' },
+    1: { icon: '🌲', name: 'Forest Maze', desc: 'Winding · Multiple corners', author: 'Official Map' },
+    2: { icon: '🏔️', name: 'Snow Pass', desc: 'Narrow passage · Focus fire', author: 'Official Map' },
+    3: { icon: '🌋', name: 'Lava Rift', desc: 'Dual lanes · Split defense', author: 'Official Map' },
+    custom: { icon: '✏️', name: 'Custom Map', desc: 'Free design · Infinite creativity', author: 'You' },
+};
+const MAPS = {
+    0: { name: 'Desert Line', waypoints: [{x:0,y:2},{x:6,y:2},{x:6,y:8},{x:14,y:8},{x:14,y:4},{x:18,y:4},{x:18,y:12},{x:10,y:12},{x:10,y:14}], colors: {path:'#3f506e',bg:'#1b2537'}, mapId:0 },
+    1: { name: 'Forest Maze', waypoints: [{x:0,y:1},{x:4,y:1},{x:4,y:5},{x:8,y:5},{x:8,y:9},{x:12,y:9},{x:12,y:3},{x:16,y:3},{x:16,y:11},{x:10,y:11},{x:10,y:14}], colors: {path:'#3a6a4a',bg:'#1a2a1a'}, mapId:1 },
+    2: { name: 'Snow Pass', waypoints: [{x:0,y:3},{x:3,y:3},{x:3,y:7},{x:7,y:7},{x:7,y:3},{x:11,y:3},{x:11,y:11},{x:15,y:11},{x:15,y:5},{x:19,y:5}], colors: {path:'#5a7a8a',bg:'#1a2a3a'}, mapId:2 },
+    3: { name: 'Lava Rift', waypoints: LAVA_WAYPOINTS_TOP, colors: {path:'#6a4a3a',bg:'#1a1a1a'}, mapId:3, isDualLane: true, waypointsTop: LAVA_WAYPOINTS_TOP, waypointsBottom: LAVA_WAYPOINTS_BOTTOM },
+};
+
+let selectedDetailMap = null;
+const detailOverlay = document.getElementById('detailOverlay');
+const detailPreviewCanvas = document.getElementById('detailPreviewCanvas');
+const detailCtx = detailPreviewCanvas ? detailPreviewCanvas.getContext('2d') : null;
+
+function renderDetailPreview(waypoints, colors) {
+    if (!detailCtx) return;
+    const w = detailPreviewCanvas.width, h = detailPreviewCanvas.height;
+    const COLS = 20, ROWS = 15, cell = 20;
+    detailCtx.setTransform(1, 0, 0, 1, 0, 0);
+    detailCtx.globalAlpha = 1;
+    detailCtx.clearRect(0, 0, w, h);
+    for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS; c++) {
+            const x = c * cell, y = r * cell;
+            const isPath = waypoints.some(p => p.x === c && p.y === r);
+            let onSegment = false;
+            for (let i = 0; i < waypoints.length - 1; i++) {
+                const p1 = waypoints[i], p2 = waypoints[i+1];
+                if (p1.x === p2.x) { const minY = Math.min(p1.y, p2.y), maxY = Math.max(p1.y, p2.y); if (c === p1.x && r >= minY && r <= maxY) { onSegment = true; break; } }
+                else if (p1.y === p2.y) { const minX = Math.min(p1.x, p2.x), maxX = Math.max(p1.x, p2.x); if (r === p1.y && c >= minX && c <= maxX) { onSegment = true; break; } }
+            }
+            const isPathCell = isPath || onSegment;
+            detailCtx.fillStyle = isPathCell ? (colors ? colors.path : '#3f506e') : (colors ? colors.bg : '#1b2537');
+            detailCtx.fillRect(x, y, cell - 0.5, cell - 0.5);
+            if (isPathCell) { detailCtx.fillStyle = '#5a7a6a'; detailCtx.fillRect(x + 2, y + 2, cell - 5, cell - 5); }
+            else { detailCtx.fillStyle = '#232f43'; detailCtx.fillRect(x + 1, y + 1, cell - 3, cell - 3); }
+        }
+    }
+    if (waypoints.length > 1) {
+        detailCtx.strokeStyle = '#4fc3a0'; detailCtx.lineWidth = 2.5;
+        detailCtx.beginPath();
+        for (let i = 0; i < waypoints.length; i++) { const px = waypoints[i].x * cell + cell / 2, py = waypoints[i].y * cell + cell / 2; if (i === 0) detailCtx.moveTo(px, py); else detailCtx.lineTo(px, py); }
+        detailCtx.stroke();
+    }
+}
+
+function openDetail(mapId, mapData, isCreative) {
+    const meta = isCreative ? { icon: '🎨', name: mapData.name || 'Creative Map', desc: 'Custom map', author: mapData.author || 'Unknown Author' } : MAP_META[mapId];
+    if (!meta) return;
+    document.getElementById('detailIcon').textContent = meta.icon || '🗺️';
+    document.getElementById('detailName').textContent = meta.name || 'Unknown Map';
+    document.getElementById('detailAuthor').textContent = '✍️ ' + (meta.author || 'Unknown Author');
+    document.getElementById('detailDesc').textContent = meta.desc || 'No description';
+    document.getElementById('detailWaypointCount').textContent = mapData.waypoints.length;
+    selectedDetailMap = { mapId, mapData, isCreative };
+    renderDetailPreview(mapData.waypoints, mapData.colors);
+    detailOverlay.classList.add('visible');
+}
+function closeDetail() { detailOverlay.classList.remove('visible'); selectedDetailMap = null; }
+
+function startFromDetail() {
+    if (!selectedDetailMap) return;
+    const { mapId, mapData, isCreative } = selectedDetailMap;
+    closeDetail();
+    let startMapData = null, isCustom = false;
+    if (isCreative) { startMapData = { name: mapData.name || 'Creative Map', waypoints: mapData.waypoints, colors: mapData.colors || { path: '#4a6a7a', bg: '#1a2a3a' }, mapId: 'creative_' + Date.now() }; isCustom = false; }
+    else if (mapId === 'custom') { const customData = getCustomMapData(); if (!customData) { showToast('❌ Please draw a path first'); return; } startMapData = customData; isCustom = true; }
+    else { startMapData = MAPS[mapId]; if (!startMapData) return; isCustom = false; }
+    pendingStartMap = { mapData: startMapData, isCustom: isCustom };
+    openLoadoutScreen(true);
+}
+
+const EDITOR_COLS=20, EDITOR_ROWS=15, EDITOR_CELL_SIZE=20;
+let customPath = [], editorHistory = [], editorMode = 'path';
+const editorCanvas = document.getElementById('editorCanvas');
+const edCtx = editorCanvas ? editorCanvas.getContext('2d') : null;
+
+function initEditor() { customPath=[]; editorHistory=[]; updatePathCount(); drawEditorGrid(); }
+function drawEditorGrid() {
+    if (!edCtx) return;
+    const w=editorCanvas.width, h=editorCanvas.height, cell=EDITOR_CELL_SIZE;
+    edCtx.setTransform(1, 0, 0, 1, 0, 0);
+    edCtx.globalAlpha = 1;
+    edCtx.clearRect(0,0,w,h);
+    for(let r=0;r<EDITOR_ROWS;r++) for(let c=0;c<EDITOR_COLS;c++) {
+        const x=c*cell, y=r*cell, isPath=customPath.some(p=>p.x===c&&p.y===r);
+        edCtx.fillStyle = isPath ? '#2d5a3a' : '#1a2332';
+        edCtx.fillRect(x,y,cell-0.5,cell-0.5);
+        if(!isPath) { edCtx.fillStyle='#232f43'; edCtx.fillRect(x+1,y+1,cell-3,cell-3); }
+        else { edCtx.fillStyle='#3a7a4a'; edCtx.fillRect(x+1,y+1,cell-3,cell-3); }
+    }
+    if(customPath.length>1) {
+        edCtx.strokeStyle='#5acc7a'; edCtx.lineWidth=3;
+        edCtx.beginPath();
+        for(let i=0;i<customPath.length;i++){ const p=customPath[i]; const px=p.x*cell+cell/2, py=p.y*cell+cell/2; if(i===0)edCtx.moveTo(px,py);else edCtx.lineTo(px,py); }
+        edCtx.stroke();
+    }
+    if(customPath.length>0) {
+        const first=customPath[0], last=customPath[customPath.length-1];
+        edCtx.font='14px sans-serif'; edCtx.textAlign='center'; edCtx.textBaseline='middle';
+        edCtx.fillStyle='#4fc3a0'; edCtx.fillText('S', first.x*cell+cell/2, first.y*cell+cell/2);
+        if(customPath.length>1) { edCtx.fillStyle='#e0645a'; edCtx.fillText('E', last.x*cell+cell/2, last.y*cell+cell/2); }
+    }
+    const statusEl = document.getElementById('editorStatus');
+    if (statusEl) {
+        if (customPath.length >= 2) { statusEl.textContent = '✅ Path connected'; statusEl.style.color = '#8acc9a'; }
+        else if (customPath.length > 0) { statusEl.textContent = '⚠️ Need at least 2 points'; statusEl.style.color = '#ff8844'; }
+        else { statusEl.textContent = '✏️ Click grid to draw'; statusEl.style.color = '#8699bb'; }
+    }
+}
+function updatePathCount() { const el = document.getElementById('pathCount'); if (el) el.textContent = customPath.length; }
+function addPathPoint(x,y) {
+    if(customPath.some(p=>p.x===x&&p.y===y)) return false;
+    if(customPath.length>0) { const last=customPath[customPath.length-1]; if(Math.abs(last.x-x)>1||Math.abs(last.y-y)>1) return false; }
+    editorHistory.push(JSON.stringify(customPath));
+    customPath.push({x,y}); updatePathCount(); drawEditorGrid(); return true;
+}
+function erasePathPoint(x,y) {
+    const idx=customPath.findIndex(p=>p.x===x&&p.y===y);
+    if(idx===-1) return false;
+    if(customPath.length>1 && (idx===0||idx===customPath.length-1)) return false;
+    editorHistory.push(JSON.stringify(customPath));
+    customPath.splice(idx,1); updatePathCount(); drawEditorGrid(); return true;
+}
+function clearPath(){ if(customPath.length===0)return; editorHistory.push(JSON.stringify(customPath)); customPath=[]; updatePathCount(); drawEditorGrid(); }
+function undoPath(){ if(editorHistory.length===0)return; customPath=JSON.parse(editorHistory.pop()); updatePathCount(); drawEditorGrid(); }
+function getCustomMapData(){
+    if(customPath.length<2){ return null; }
+    for(let i=0; i<customPath.length-1; i++) { const p1=customPath[i], p2=customPath[i+1]; if(Math.abs(p1.x-p2.x)+Math.abs(p1.y-p2.y) !== 1) return null; }
+    return { name:'Custom Map', waypoints:customPath.map(p=>({x:p.x,y:p.y})), colors:{path:'#3a7a4a',bg:'#1a2a1a'}, mapId:'custom' };
+}
+function getEditorGridPos(e) {
+    if (!editorCanvas) return null;
+    const rect = editorCanvas.getBoundingClientRect();
+    const scaleX = editorCanvas.width / rect.width, scaleY = editorCanvas.height / rect.height;
+    const mx = (e.clientX - rect.left) * scaleX, my = (e.clientY - rect.top) * scaleY;
+    const col = Math.floor(mx / EDITOR_CELL_SIZE), row = Math.floor(my / EDITOR_CELL_SIZE);
+    if(col<0||col>=EDITOR_COLS||row<0||row>=EDITOR_ROWS) return null;
+    return {x:col,y:row};
+}
+
+const loadoutScreen = document.getElementById('loadoutScreen');
+const accountScreen = document.getElementById('accountScreen');
+const mainMenu = document.getElementById('mainMenu');
+const gameWrapper = document.getElementById('gameWrapper');
+const startLoadoutHint = document.getElementById('startLoadoutHint');
+
+function openLoadoutScreen(isForStart) {
+    updateLoadoutPageUI();
+    if (isForStart) startLoadoutHint.classList.add('visible');
+    else startLoadoutHint.classList.remove('visible');
+    loadoutScreen.classList.add('visible');
+    mainMenu.classList.remove('visible');
+}
+
+function closeLoadoutScreen() {
+    loadoutScreen.classList.remove('visible');
+    startLoadoutHint.classList.remove('visible');
+    if (!pendingStartMap) mainMenu.classList.add('visible');
+}
+
+function openAccountScreen() { updateAccountUI(); updateLevelUI(); updateAchievementUI(); accountScreen.classList.add('visible'); mainMenu.classList.remove('visible'); }
+function closeAccountScreen() { accountScreen.classList.remove('visible'); mainMenu.classList.add('visible'); }
+
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas ? canvas.getContext('2d') : null;
+const livesSpan = document.getElementById('livesDisplay');
+const cashSpan = document.getElementById('cashDisplay');
+const waveSpan = document.getElementById('waveDisplay');
+const bagCountSpan = document.getElementById('bagCountDisplay');
+const cpSpan = document.getElementById('cpDisplay');
+const medalSpan = document.getElementById('medalDisplay');
+const ammoSpan = document.getElementById('ammoDisplay');
+const robotCountSpan = document.getElementById('robotCountDisplay');
+
+function settleGameRewards(g) {
+    const inventory = g.inventory || [];
+    if (!accountData.warehouse) accountData.warehouse = {};
+    for (let key of inventory) accountData.warehouse[key] = (accountData.warehouse[key] || 0) + 1;
+    const earnedGold = g.cash || 0;
+    accountData.gold = (accountData.gold || 0) + earnedGold;
+    accountData.loadout = [];
+    accountData.loadoutGold = 0;
+    recordGameStats(g.mapId, g.wave, g.medals, { kills: g.totalKills || 0, bossKills: g.totalBossKills || 0, bigBossKills: g.totalBigBossKills || 0, towersBuilt: g.totalTowersBuilt || 0, cardsUsed: g.totalCardsUsed || 0, medaledTowers: g.totalMedaledTowers || 0 });
+    saveAccountLocal(); updateAccountUI(); updateLoadoutPageUI();
+    showToast('🎉 Battle rewards! Gold +' + earnedGold + ', backpack +' + inventory.length + ' towers stored');
+}
+
+function recordGameStats(mapId, wave, medals, stats) {
+    if (!accountData.mapRecords) accountData.mapRecords = {};
+    if (!accountData.mapRecords[mapId]) accountData.mapRecords[mapId] = { waves: 0, medals: 0, games: 0 };
+    const rec = accountData.mapRecords[mapId];
+    rec.games = (rec.games || 0) + 1;
+    if (wave > (rec.waves || 0)) rec.waves = wave;
+    rec.medals = (rec.medals || 0) + medals;
+    accountData.totalMedals = (accountData.totalMedals || 0) + medals;
+    accountData.totalGames = (accountData.totalGames || 0) + 1;
+    if (!accountData.stats) accountData.stats = { totalKills:0, totalBossKills:0, totalBigBossKills:0, totalWaves:0, totalMedalsEarned:0, totalTowersBuilt:0, totalCardsUsed:0, totalMedaledTowers:0, mapsPlayed:[], customMapPlayed:false };
+    const s = accountData.stats;
+    s.totalWaves = (s.totalWaves || 0) + wave;
+    s.totalMedalsEarned = (s.totalMedalsEarned || 0) + medals;
+    if (stats) {
+        s.totalKills = (s.totalKills || 0) + (stats.kills || 0);
+        s.totalBossKills = (s.totalBossKills || 0) + (stats.bossKills || 0);
+        s.totalBigBossKills = (s.totalBigBossKills || 0) + (stats.bigBossKills || 0);
+        s.totalTowersBuilt = (s.totalTowersBuilt || 0) + (stats.towersBuilt || 0);
+        s.totalCardsUsed = (s.totalCardsUsed || 0) + (stats.cardsUsed || 0);
+        s.totalMedaledTowers = (s.totalMedaledTowers || 0) + (stats.medaledTowers || 0);
+    }
+    const mapIdStr = String(mapId);
+    if (!s.mapsPlayed) s.mapsPlayed = [];
+    if (!s.mapsPlayed.includes(mapIdStr)) {
+        s.mapsPlayed.push(mapIdStr);
+        if (s.mapsPlayed.includes('0') && s.mapsPlayed.includes('1') && s.mapsPlayed.includes('2') && s.mapsPlayed.includes('3')) unlockAchievement('all_maps');
+    }
+    if (mapIdStr === 'custom' || mapIdStr.startsWith('creative_')) { s.customMapPlayed = true; unlockAchievement('custom_map'); }
+    if (wave >= 5) unlockAchievement('first_win');
+    if (wave >= 10) unlockAchievement('wave10');
+    if (wave >= 20) unlockAchievement('wave20');
+    if (wave >= 30) unlockAchievement('wave30');
+    if (medals >= 1) unlockAchievement('first_medal');
+    if (accountData.totalMedals >= 10) unlockAchievement('medal_10');
+    if (accountData.totalMedals >= 50) unlockAchievement('medal_50');
+    const expGain = wave * 5 + medals * 20;
+    addExp(expGain);
+    saveAccountLocal(); updateMapRecordsUI(); updateLevelUI(); updateAchievementUI();
+}
+
+function startGame(mapData, isCustom) {
+    mainMenu.classList.remove('visible');
+    loadoutScreen.classList.remove('visible');
+    accountScreen.classList.remove('visible');
+    gameWrapper.style.display = 'block';
+    if (game) { game.destroy(); game = null; }
+    const isLava = mapData.mapId === 3 || mapData.mapId === '3';
+    game = new TowerDefenseGame(canvas, ctx, mapData, {
+        livesSpan, cashSpan, waveSpan, bagCountSpan, cpSpan, medalSpan, ammoSpan, robotCountSpan,
+        shopBtn: document.getElementById('shopBtn'),
+        premiumBtn: document.getElementById('premiumBtn'),
+        premiumPanel: document.getElementById('premiumPanel'),
+        premiumStats: document.getElementById('premiumStats'),
+        cardBtn: document.getElementById('cardBtn'),
+        cardPanel: document.getElementById('cardPanel'),
+        cardGrid: document.getElementById('cardGrid'),
+        cpCounter: document.getElementById('cpCounter'),
+        deckCount: document.getElementById('deckCount'),
+        bagBtn: document.getElementById('bagBtn'),
+        batchBtn: document.getElementById('batchBtn'),
+        ammoShopBtn: document.getElementById('ammoShopBtn'),
+        robotShopBtn: document.getElementById('robotShopBtn'),
+        restartBtn: document.getElementById('restartBtn'),
+        backBtn: document.getElementById('backBtn'),
+        shopPanel: document.getElementById('shopPanel'),
+        bagPanel: document.getElementById('bagPanel'),
+        bagSlots: document.getElementById('bagSlots'),
+        bagEmptyMsg: document.getElementById('bagEmptyMsg'),
+        modeIndicator: document.getElementById('modeIndicator'),
+    }, isLava);
+    game.mapId = mapData.mapId !== undefined ? mapData.mapId : 0;
+    game.isCustomMap = isCustom;
+    game.customPath = isCustom ? customPath : [];
+    if (isLava) { game.isDualLane = true; game.waypointsTop = LAVA_WAYPOINTS_TOP; game.waypointsBottom = LAVA_WAYPOINTS_BOTTOM; game.waypoints = LAVA_WAYPOINTS_TOP; mapData.waypoints = LAVA_WAYPOINTS_TOP; }
+    game.init();
+}
+
+// ==================== Color helpers ====================
+function lightenColor(hex, amt) {
+    let r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
+    r = Math.min(255, r + amt); g = Math.min(255, g + amt); b = Math.min(255, b + amt);
+    return '#' + r.toString(16).padStart(2, '0') + g.toString(16).padStart(2, '0') + b.toString(16).padStart(2, '0');
+}
+function darkenColor(hex, amt) {
+    let r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
+    r = Math.max(0, r - amt); g = Math.max(0, g - amt); b = Math.max(0, b - amt);
+    return '#' + r.toString(16).padStart(2, '0') + g.toString(16).padStart(2, '0') + b.toString(16).padStart(2, '0');
+}
+
+// ==================== TowerDefenseGame class ====================
+class TowerDefenseGame {
+    constructor(canvas, ctx, mapData, uiElements, isDualLane) {
+        this.canvas = canvas; this.ctx = ctx; this.mapData = mapData; this.ui = uiElements;
+        this.waypoints = mapData.waypoints; this.mapColors = mapData.colors;
+        this.COLS = 20; this.ROWS = 15; this.CELL = 40;
+        this.lives = 20; this.cash = 150; this.wave = 0; this.gameOver = false;
+        this.commandPoints = 12; this.medals = 0; this.ammo = 500; this.robots = 0;
+        this.totalKills = 0; this.totalBossKills = 0; this.totalBigBossKills = 0;
+        this.totalTowersBuilt = 0; this.totalCardsUsed = 0; this.totalMedaledTowers = 0;
+        this.firstBloodDone = false; this.firstBossDone = false; this.firstBigBossDone = false;
+        this.firstTauntDone = false; this.firstRobotDone = false; this.firstMedalDone = false;
+        this.firstCardDone = false; this.maxLevelDone = false;
+        this.enemies=[]; this.towers=[]; this.bullets=[]; this.damageNumbers=[];
+        this.fireTrails=[];
+        this.inventory=[]; this.shopOpen=false; this.bagOpen=false; this.premiumOpen=false; this.cardOpen=false;
+        this.selectedTowerType=null; this.batchMode=false; this.batchSelection=new Set();
+        this.RETRIEVE_DURATION=5*60;
+        this.enemiesThisWave=0; this.enemiesSpawned=0; this.spawnTimer=0; this.waveInProgress=false; this.waveCooldown=20;
+        this.bossActive=false; this.bossSpawned=false; this.bossDefeated=false; this.isBigBoss=false;
+        this.mouseGridX=-1; this.mouseGridY=-1;
+        this.selectedTower = null;
+        this.boundHandleClick=this.handleCanvasClick.bind(this);
+        this.boundHandleMove=this.handleMouseMove.bind(this);
+        this.boundHandleLeave=this.handleMouseLeave.bind(this);
+        this.animationId=null;
+        this.mapId=mapData.mapId!==undefined?mapData.mapId:0;
+        this.isDualLane = !!isDualLane;
+        this.waypointsTop = LAVA_WAYPOINTS_TOP; this.waypointsBottom = LAVA_WAYPOINTS_BOTTOM;
+        this.laneToggle = 0; this.premiumPrices = {};
+        this.hand = []; this.deck = [];
+        this.autoWaveEnabled = true;
+        this.initFromAccountLoadout(); this.initPremiumPrices(); this.initDeck(); this.renderShopPanel();
+        this.rewardWaveInterval = 20; this.lastRewardWave = 0;
+    }
+
+    initFromAccountLoadout() {
+        const loadout = accountData.loadout || [];
+        const loadoutGold = accountData.loadoutGold || 0;
+        this.inventory = loadout.slice();
+        this.cash = 150 + loadoutGold;
+        accountData.loadout = []; accountData.loadoutGold = 0;
+        accountData.gold = Math.max(0, (accountData.gold || 0) - loadoutGold);
+        saveAccountLocal();
+    }
+
+    renderShopPanel() {
+        const panel = this.ui.shopPanel;
+        if (!panel) return;
+        panel.innerHTML = '';
+        for (let key of SHOP_TOWER_KEYS) {
+            const def = TOWER_TYPES[key];
+            if (!def) continue;
+            const div = document.createElement('div');
+            div.className = 'shop-item';
+            div.innerHTML = '<span class="tower-icon">' + def.icon + '</span><span>' + def.name + '</span><span class="price" id="price_' + key + '">💰 ' + def.cost + '</span><button class="btn" data-tower="' + key + '">Buy</button>';
+            panel.appendChild(div);
+        }
+        panel.querySelectorAll('.btn[data-tower]').forEach(btn => {
+            btn.addEventListener('click', (e) => { e.stopPropagation(); this.buyTower(btn.dataset.tower); });
+        });
+    }
+
+    initDeck() { this.deck = []; for (let key of CARD_LIST) { this.deck.push(key); this.deck.push(key); } this.shuffleDeck(); this.hand = []; for (let i = 0; i < 5; i++) { if (this.deck.length > 0) this.hand.push(this.deck.pop()); } this.renderCards(); }
+    shuffleDeck() { for (let i = this.deck.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); const t = this.deck[i]; this.deck[i] = this.deck[j]; this.deck[j] = t; } }
+    drawCard() { if (this.deck.length === 0) return false; const card = this.deck.pop(); this.hand.push(card); this.renderCards(); return true; }
+
+    useCardFromHand(index) {
+        if (index < 0 || index >= this.hand.length) return;
+        const cardId = this.hand[index];
+        const def = CARD_TYPES[cardId];
+        if (!def) return;
+        if (this.commandPoints < def.cost) { showToast('❌ Not enough CP!'); return; }
+        if (this.gameOver) return;
+        this.commandPoints -= def.cost;
+        this.applyCardEffect(cardId);
+        this.hand.splice(index, 1);
+        this.totalCardsUsed++;
+        if (!this.firstCardDone) { this.firstCardDone = true; unlockAchievement('first_card'); }
+        this.updateStats(); this.renderCards();
+        showToast('✅ Used ' + def.icon + ' ' + def.name);
+    }
+
+    applyCardEffect(cardId) {
+        const def = CARD_TYPES[cardId];
+        if (!def) return;
+        if (cardId === 'repair') { for (let t of this.towers) { if (t.isRetrieving) continue; const heal = t.maxHp * 0.3; t.hp = Math.min(t.maxHp, t.hp + heal); } }
+        else if (cardId === 'rally') { this.cash += 30; this.updateStats(); }
+        else if (cardId === 'bomb') { for (let i = this.enemies.length - 1; i >= 0; i--) { const e = this.enemies[i]; e.hp -= 100; if (e.hp <= 0) { this.cash += e.reward || 3; this.enemies.splice(i, 1); this.totalKills++; } } this.updateStats(); }
+        else if (cardId === 'slow') { for (let e of this.enemies) e.slowTimer = 8 * 60; }
+    }
+
+    renderCards() {
+        const grid = this.ui.cardGrid;
+        if (!grid) return;
+        grid.innerHTML = '';
+        if (this.ui.cpCounter) this.ui.cpCounter.textContent = this.commandPoints;
+        if (this.ui.cpSpan) this.ui.cpSpan.textContent = this.commandPoints;
+        if (this.ui.deckCount) this.ui.deckCount.textContent = this.deck.length;
+        if (this.hand.length === 0) { grid.innerHTML = '<div class="card-empty">🃏 Hand is empty</div>'; return; }
+        for (let i = 0; i < this.hand.length; i++) {
+            const key = this.hand[i];
+            const def = CARD_TYPES[key];
+            if (!def) continue;
+            const canAfford = this.commandPoints >= def.cost;
+            const div = document.createElement('div');
+            div.className = 'card-slot' + (canAfford ? '' : ' disabled');
+            div.innerHTML = '<span class="card-icon">' + def.icon + '</span><div class="card-name">' + def.name + '</div><div class="card-cost">🎴 ' + def.cost + '</div>';
+            if (canAfford) div.addEventListener('click', () => { this.useCardFromHand(i); });
+            grid.appendChild(div);
+        }
+    }
+
+    initPremiumPrices() { for (let key of SHOP_TOWER_KEYS) { const def = TOWER_TYPES[key]; if (def) this.premiumPrices[key] = def.cost; } }
+    updatePremiumPrices() { for (let key of SHOP_TOWER_KEYS) { const def = TOWER_TYPES[key]; if (!def) continue; const maxP = Math.floor(def.cost * 0.5); this.premiumPrices[key] = def.cost + Math.floor(Math.random() * (maxP + 1)); } this.updateShopPrices(); this.renderPremiumStats(); }
+    getPremiumPrice(key) { return this.premiumPrices[key] !== undefined ? this.premiumPrices[key] : (TOWER_TYPES[key] ? TOWER_TYPES[key].cost : 0); }
+    updateShopPrices() { for (let key of SHOP_TOWER_KEYS) { const el = document.getElementById('price_' + key); if (!el) continue; el.textContent = '💰 ' + this.getPremiumPrice(key); } }
+    renderPremiumStats() {
+        const c = this.ui.premiumStats;
+        if (!c) return;
+        c.innerHTML = '';
+        for (let key of SHOP_TOWER_KEYS) {
+            const def = TOWER_TYPES[key];
+            if (!def) continue;
+            const p = this.getPremiumPrice(key);
+            const diff = p - def.cost;
+            const div = document.createElement('div');
+            div.className = 'premium-stat';
+            div.innerHTML = '<div class="ps-icon">' + def.icon + '</div><div class="ps-name">' + def.name + '</div><div class="ps-price">💰 ' + p + '</div><div class="ps-change ' + (diff > 0 ? 'up' : 'flat') + '">' + (diff > 0 ? '↑ +' + diff : '= Base') + '</div>';
+            c.appendChild(div);
+        }
+    }
+
+    toggleBatchMode() { this.batchMode = !this.batchMode; if (this.ui.batchBtn) this.ui.batchBtn.classList.toggle('active', this.batchMode); this.updateModeIndicator(); }
+
+    handleCanvasClick(e) {
+        if (this.batchMode || this.gameOver) return;
+        const rect = this.canvas.getBoundingClientRect();
+        const scaleX = this.canvas.width / rect.width, scaleY = this.canvas.height / rect.height;
+        const mx = (e.clientX - rect.left) * scaleX, my = (e.clientY - rect.top) * scaleY;
+        const col = Math.floor(mx / this.CELL), row = Math.floor(my / this.CELL);
+        if (col < 0 || col >= this.COLS || row < 0 || row >= this.ROWS) return;
+        const clickedTower = this.getTowerAt(col, row);
+        if (clickedTower && !clickedTower.isRetrieving && !this.selectedTowerType) { this.selectedTower = clickedTower; this.updateModeIndicator(); return; }
+        if (this.selectedTowerType && this.inventory.includes(this.selectedTowerType)) { this.deployTowerFromBag(col, row); this.selectedTower = null; this.updateModeIndicator(); }
+        else { this.selectedTower = null; this.updateModeIndicator(); }
+    }
+
+    handleMouseMove(e) {
+        const rect = this.canvas.getBoundingClientRect();
+        const scaleX = this.canvas.width / rect.width, scaleY = this.canvas.height / rect.height;
+        this.mouseGridX = Math.floor(((e.clientX - rect.left) * scaleX) / this.CELL);
+        this.mouseGridY = Math.floor(((e.clientY - rect.top) * scaleY) / this.CELL);
+    }
+
+    handleMouseLeave() { this.mouseGridX = -1; this.mouseGridY = -1; }
+
+    upgradeTower(t) {
+        if (!t || t.isRetrieving) return;
+        if (t.isBarrier || t.isTaunt) { showToast('⚠️ This tower cannot be upgraded'); return; }
+        const def = TOWER_TYPES[t.type];
+        const maxLevel = def.maxLevel || 18;
+        if (t.level >= maxLevel) { showToast('⚠️ Already max level'); return; }
+        const cost = this.getUpgradeCost(t);
+        if (this.cash < cost) { showToast('❌ Not enough gold! Need ' + cost); return; }
+        this.cash -= cost; t.level++;
+        t.damage = Math.floor(t.damage * 1.18); t.range = Math.floor(t.range * 1.06);
+        this.updateStats();
+        if (t.level >= maxLevel) { t.skillActive = true; showToast('⬆️ ' + def.name + ' MAX!'); if (!this.maxLevelDone) { this.maxLevelDone = true; unlockAchievement('max_level_tower'); } }
+        else showToast('⬆️ ' + def.name + ' upgraded to Lv.' + t.level);
+    }
+
+    getUpgradeCost(t) { const bc = TOWER_TYPES[t.type] ? TOWER_TYPES[t.type].cost : 100; return Math.floor(bc * 0.15 * (t.level || 1)) + 20; }
+    updateRobots() { if (this.robots <= 0) return; for (let t of this.towers) { if (t.isRetrieving || t.isTaunt || t.isBarrier || t.isSpike) continue; if (t.isReloading || t.ammo >= 300) continue; t.ammo += Math.min(300 - t.ammo, 5); break; } }
+    buyRobot() { if (this.cash < 500) { showToast('❌ Not enough gold! Need 500💰'); return; } this.cash -= 500; this.robots++; if (!this.firstRobotDone) { this.firstRobotDone = true; unlockAchievement('first_robot'); } this.updateStats(); }
+
+    init() {
+        this.lives = 20; this.wave = 0; this.gameOver = false;
+        this.commandPoints = 12; this.medals = 0; this.ammo = 500; this.robots = 0;
+        this.enemies = []; this.towers = []; this.bullets = []; this.damageNumbers = [];
+        this.fireTrails = [];
+        this.batchSelection = new Set(); this.batchMode = false;
+        this.selectedTowerType = null; this.selectedTower = null;
+        this.waveInProgress = false; this.waveCooldown = 20;
+        this.bossActive = false; this.bossSpawned = false; this.bossDefeated = false;
+        this.isBigBoss = false; this.enemiesSpawned = 0; this.enemiesThisWave = 0; this.spawnTimer = 0;
+        this.autoWaveEnabled = autoWaveEnabled; this.lastRewardWave = 0;
+        this.updateStats(); this.updateBagUI(); this.updateModeIndicator();
+        this.canvas.addEventListener('mousemove', this.boundHandleMove);
+        this.canvas.addEventListener('mouseleave', this.boundHandleLeave);
+        this.canvas.addEventListener('click', this.boundHandleClick);
+        this.bindUIEvents();
+        this.renderCards();
+        this.loop();
+    }
+
+    destroy() {
+        if (this.animationId) { cancelAnimationFrame(this.animationId); this.animationId = null; }
+        this.canvas.removeEventListener('mousemove', this.boundHandleMove);
+        this.canvas.removeEventListener('mouseleave', this.boundHandleLeave);
+        this.canvas.removeEventListener('click', this.boundHandleClick);
+    }
+
+    isPathCell(col, row) {
+        if (this.isDualLane) {
+            return this.isOnPath(this.waypointsTop, col, row) || this.isOnPath(this.waypointsBottom, col, row);
+        }
+        return this.isOnPath(this.waypoints, col, row);
+    }
+
+    isOnPath(path, col, row) {
+        if (!path || path.length === 0) return false;
+        for (let i = 0; i < path.length; i++) {
+            if (path[i].x === col && path[i].y === row) return true;
+        }
+        for (let i = 0; i < path.length - 1; i++) {
+            const p1 = path[i], p2 = path[i + 1];
+            if (p1.x === p2.x) {
+                const minY = Math.min(p1.y, p2.y);
+                const maxY = Math.max(p1.y, p2.y);
+                if (col === p1.x && row >= minY && row <= maxY) return true;
+            } else if (p1.y === p2.y) {
+                const minX = Math.min(p1.x, p2.x);
+                const maxX = Math.max(p1.x, p2.x);
+                if (row === p1.y && col >= minX && col <= maxX) return true;
+            }
+        }
+        return false;
+    }
+
+    isBuildable(col, row, typeKey) {
+        if (col < 0 || col >= this.COLS || row < 0 || row >= this.ROWS) return false;
+        const isPath = this.isPathCell(col, row);
+        const isBarrier = typeKey === 'barrier', isSpike = typeKey === 'spike', isTaunt = typeKey === 'taunt';
+        if (isTaunt && isPath) return false;
+        if (isSpike && !isPath) return false;
+        if (isBarrier && !isPath) return false;
+        if (!isBarrier && !isSpike && !isTaunt && isPath) return false;
+        for (let t of this.towers) if (t.col === col && t.row === row) return false;
+        return true;
+    }
+
+    getTowerAt(col, row) { for (let t of this.towers) if (t.col === col && t.row === row) return t; return null; }
+
+    createTowerObject(col, row, typeKey) {
+        const typeDef = TOWER_TYPES[typeKey];
+        if (!typeDef) return null;
+        return {
+            col: col, row: row, x: col * this.CELL + this.CELL / 2, y: row * this.CELL + this.CELL / 2,
+            cooldown: 0, range: typeDef.range, damage: typeDef.damage, fireRate: typeDef.fireRate,
+            angle: 0, targetAngle: 0, rotateSpeed: typeDef.rotateSpeed,
+            type: typeKey, color: typeDef.color, icon: typeDef.icon,
+            aoeRadius: typeDef.aoeRadius || 0, isRetrieving: false, retrieveProgress: 0,
+            hp: typeDef.hp || 300, maxHp: typeDef.hp || 300,
+            isBarrier: typeDef.isBarrier || false, barrierHp: typeDef.isBarrier ? 910 : 0, maxBarrierHp: typeDef.isBarrier ? 910 : 0,
+            isSpike: typeDef.isSpike || false, isTaunt: typeDef.isTaunt || false,
+            isShield: typeDef.isShield || false, shieldHp: typeDef.shieldHp || 0, maxShieldHp: typeDef.shieldHp || 0,
+            level: 1, tempShield: 0, skillActive: false,
+            ammo: 0, isReloading: false, reloadProgress: 0, isMedaled: false,
+        };
+    }
+
+    updateStats() {
+        if (this.ui.livesSpan) this.ui.livesSpan.textContent = this.lives;
+        if (this.ui.cashSpan) this.ui.cashSpan.textContent = this.cash;
+        if (this.ui.waveSpan) this.ui.waveSpan.textContent = this.wave;
+        if (this.ui.cpSpan) this.ui.cpSpan.textContent = this.commandPoints;
+        if (this.ui.medalSpan) this.ui.medalSpan.textContent = this.medals;
+        if (this.ui.ammoSpan) this.ui.ammoSpan.textContent = this.ammo;
+        if (this.ui.robotCountSpan) this.ui.robotCountSpan.textContent = this.robots;
+    }
+
+    updateBagUI() {
+        if (this.ui.bagCountSpan) this.ui.bagCountSpan.textContent = this.inventory.length;
+        const slots = this.ui.bagSlots;
+        if (!slots) return;
+        slots.innerHTML = '';
+        if (this.inventory.length === 0) { if (this.ui.bagEmptyMsg) this.ui.bagEmptyMsg.style.display = 'block'; return; }
+        if (this.ui.bagEmptyMsg) this.ui.bagEmptyMsg.style.display = 'none';
+        const countMap = {};
+        for (let type of this.inventory) countMap[type] = (countMap[type] || 0) + 1;
+        for (let type in countMap) {
+            const def = TOWER_TYPES[type];
+            if (!def) continue;
+            const div = document.createElement('div');
+            div.className = 'shop-item';
+            const isSelected = this.selectedTowerType === type;
+            div.style.border = isSelected ? '2px solid #8acc9a' : '1px solid #3f5a6a';
+            div.innerHTML = '<span class="tower-icon">' + def.icon + '</span><span>' + def.name + '</span><span style="color:#ffd866;">×' + countMap[type] + '</span><button class="btn">' + (isSelected ? '✅' : 'Select') + '</button>';
+            slots.appendChild(div);
+            div.querySelector('.btn').addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (this.selectedTowerType === type) this.selectedTowerType = null; else this.selectedTowerType = type;
+                this.updateBagUI(); this.updateModeIndicator();
+            });
+        }
+    }
+
+    updateModeIndicator() {
+        const el = this.ui.modeIndicator;
+        if (!el) return;
+        if (this.gameOver) { el.textContent = '💀 Game Over'; return; }
+        if (this.batchMode) { el.textContent = '📐 Batch Mode'; return; }
+        if (this.selectedTower) { const def = TOWER_TYPES[this.selectedTower.type]; el.textContent = '🎯 ' + def.icon + ' ' + def.name + ' Lv.' + this.selectedTower.level; return; }
+        if (this.selectedTowerType) { const def = TOWER_TYPES[this.selectedTowerType]; el.textContent = '🎯 Deploy: ' + def.icon + ' ' + def.name; }
+        else el.textContent = '🔧 Click tower to select';
+    }
+
+    startWave() {
+        if (this.gameOver) return;
+        this.wave++; this.waveInProgress = true; this.enemiesSpawned = 0;
+        this.updatePremiumPrices();
+        if (this.wave > 0 && this.wave % this.rewardWaveInterval === 0 && this.wave > this.lastRewardWave) {
+            this.lastRewardWave = this.wave;
+            const bonusGold = 500 + this.wave * 20;
+            this.cash += bonusGold; this.medals += 2;
+            this.updateStats();
+            showToast('🎁 Wave ' + this.wave + ' Reward Crate! +' + bonusGold + '💰 +2🏅');
+        }
+        if (this.wave % 5 === 0) { this.commandPoints += 3; this.updateStats(); this.renderCards(); if (this.deck.length > 0) this.drawCard(); }
+        if (this.wave % 25 === 0) { this.bossActive = true; this.bossSpawned = false; this.bossDefeated = false; this.isBigBoss = true; this.enemiesThisWave = 1; }
+        else if (this.wave % 5 === 0) { this.bossActive = true; this.bossSpawned = false; this.bossDefeated = false; this.isBigBoss = false; this.enemiesThisWave = 1; }
+        else { this.bossActive = false; this.enemiesThisWave = this.isDualLane ? 8 + this.wave * 4 : 6 + this.wave * 3; }
+        this.spawnTimer = 0; this.updateStats();
+    }
+
+    spawnEnemy() {
+        let start;
+        if (this.isDualLane && !this.bossActive) {
+            this.laneToggle = (this.laneToggle + 1) % 2;
+            start = (this.laneToggle === 0 ? this.waypointsTop : this.waypointsBottom)[0];
+        } else start = this.waypoints[0];
+        if (this.bossActive && !this.bossSpawned) {
+            this.bossSpawned = true;
+            let hp, speed, reward, size, color;
+            if (this.isBigBoss) { hp = (800 + this.wave * 100) * 10; speed = 0.4 + Math.min(this.wave / 60, 0.7); reward = 120 + this.wave * 15; size = 40; color = '#ff2222'; }
+            else { hp = (300 + this.wave * 40) * 10; speed = 0.5 + Math.min(this.wave / 40, 0.8); reward = 60 + this.wave * 8; size = 28; color = '#ff6644'; }
+            this.enemies.push({ x: start.x * this.CELL + this.CELL / 2, y: start.y * this.CELL + this.CELL / 2, waypointIndex: 0, hp: hp, maxHp: hp, speed: speed, reward: reward, size: size, color: color, isBoss: true, isBigBoss: this.isBigBoss, slowTimer: 0, lane: this.laneToggle });
+            return;
+        }
+        const rand = Math.random();
+        let hp, speed, reward, size, color;
+        const baseHp = 25 + this.wave * 10 + Math.floor(this.wave / 3) * 8;
+        const baseSpeed = 0.8 + Math.min(this.wave / 12, 1.2);
+        const baseReward = Math.floor(Math.random() * 3) + 3;
+        if (rand < 0.3) { hp = baseHp; speed = baseSpeed; reward = baseReward; size = 14; color = '#e64539'; }
+        else if (rand < 0.5) { hp = Math.floor(baseHp * 0.5); speed = baseSpeed * 2; reward = baseReward + 2; size = 12; color = '#a05ad4'; }
+        else if (rand < 0.7) { hp = Math.floor(baseHp * 3); speed = baseSpeed * 0.75; reward = baseReward + 4; size = 20; color = '#4a8a3a'; }
+        else if (rand < 0.85) { hp = Math.floor(baseHp * 1.2); speed = baseSpeed * 0.9; reward = baseReward + 3; size = 14; color = '#e8a030'; }
+        else { hp = Math.floor(baseHp * 6); speed = baseSpeed * 0.65; reward = baseReward + 8; size = 24; color = '#c46a2a'; }
+        const lane = this.isDualLane ? this.laneToggle : 0;
+        this.enemies.push({ x: start.x * this.CELL + this.CELL / 2, y: start.y * this.CELL + this.CELL / 2, waypointIndex: 0, hp: hp, maxHp: hp, speed: speed, reward: reward, size: size, color: color, isBoss: false, isBigBoss: false, slowTimer: 0, lane: lane });
+    }
+
+    deployTowerFromBag(col, row) {
+        if (!this.selectedTowerType) return;
+        if (!this.isBuildable(col, row, this.selectedTowerType)) return;
+        const idx = this.inventory.indexOf(this.selectedTowerType);
+        if (idx === -1) { this.selectedTowerType = null; this.updateBagUI(); return; }
+        this.inventory.splice(idx, 1);
+        const tower = this.createTowerObject(col, row, this.selectedTowerType);
+        if (!tower) return;
+        this.towers.push(tower); this.totalTowersBuilt++;
+        if (this.selectedTowerType === 'taunt' && !this.firstTauntDone) { this.firstTauntDone = true; unlockAchievement('first_taunt'); }
+        if (!this.inventory.includes(this.selectedTowerType)) this.selectedTowerType = null;
+        this.updateBagUI(); this.updateModeIndicator();
+    }
+
+    buyTower(typeKey) {
+        const def = TOWER_TYPES[typeKey];
+        if (!def) return;
+        const price = this.getPremiumPrice(typeKey);
+        if (this.cash < price) { showToast('❌ Not enough gold! Need ' + price); return; }
+        this.cash -= price;
+        this.inventory.push(typeKey);
+        this.updateStats(); this.updateBagUI();
+        showToast('✅ Purchased ' + def.name);
+    }
+
+    update() {
+        if (this.gameOver) return;
+        this.updateRobots();
+        for (let t of this.towers) {
+            if (t.isReloading) {
+                t.reloadProgress++;
+                if (t.reloadProgress >= 180) {
+                    t.isReloading = false; t.reloadProgress = 0;
+                    const needed = 300 - t.ammo;
+                    const given = Math.min(needed, this.ammo);
+                    t.ammo += given; this.ammo -= given;
+                    this.updateStats();
+                }
+            }
+        }
+        if (!this.waveInProgress && this.waveCooldown <= 0 && this.autoWaveEnabled) this.startWave();
+        else if (!this.waveInProgress && this.waveCooldown > 0) this.waveCooldown--;
+
+        if (this.waveInProgress) {
+            if (this.enemiesSpawned < this.enemiesThisWave) {
+                this.spawnTimer--;
+                if (this.spawnTimer <= 0) {
+                    this.spawnEnemy();
+                    this.enemiesSpawned++;
+                    this.spawnTimer = this.bossActive ? 60 : Math.max(10, 28 - this.wave) + Math.floor(Math.random() * 6);
+                }
+            } else if (this.enemies.length === 0) {
+                this.waveInProgress = false;
+                this.waveCooldown = 35;
+                this.cash += 20 + this.wave * 5;
+                this.updateStats();
+                if (this.bossActive) {
+                    this.bossDefeated = true; this.bossActive = false;
+                    this.cash += this.isBigBoss ? 80 + this.wave * 8 : 40 + this.wave * 4;
+                    const medalDrop = 2 + Math.floor(Math.random() * 2);
+                    this.medals += medalDrop;
+                    showToast('🏅 Big BOSS defeated! +' + medalDrop + ' medals');
+                } else if (this.wave % 5 === 0 && this.wave % 25 !== 0) {
+                    if (Math.random() < 0.6) { this.medals += 1; showToast('🏅 Mini-BOSS defeated! +1 medal'); }
+                }
+                this.updateModeIndicator();
+            }
+        }
+
+        for (let i = this.enemies.length - 1; i >= 0; i--) {
+            const e = this.enemies[i];
+            if (e.slowTimer > 0) e.slowTimer--;
+            const path = (this.isDualLane && e.lane !== undefined) ? (e.lane === 0 ? this.waypointsTop : this.waypointsBottom) : this.waypoints;
+            const nextIdx = e.waypointIndex + 1;
+            if (nextIdx >= path.length) {
+                this.lives -= e.isBoss ? 5 : 1;
+                this.updateStats();
+                this.enemies.splice(i, 1);
+                if (this.lives <= 0) { this.gameOver = true; this.lives = 0; this.updateStats(); this.updateModeIndicator(); }
+                continue;
+            }
+            const targetWp = path[nextIdx];
+            const tx = targetWp.x * this.CELL + this.CELL / 2;
+            const ty = targetWp.y * this.CELL + this.CELL / 2;
+            const dx = tx - e.x, dy = ty - e.y;
+            const dist = Math.hypot(dx, dy);
+            let spd = e.speed;
+            if (e.slowTimer > 0) spd *= 0.5;
+            if (dist < 2) { e.x = tx; e.y = ty; e.waypointIndex = nextIdx; }
+            else { const step = Math.min(spd, dist); e.x += (dx / dist) * step; e.y += (dy / dist) * step; }
+        }
+
+        for (let t of this.towers) {
+            if (t.isRetrieving || t.isBarrier || t.isSpike || t.isTaunt || t.isShield) continue;
+            if (t.hp <= 0) { const idx = this.towers.indexOf(t); if (idx !== -1) this.towers.splice(idx, 1); continue; }
+            if (t.ammo <= 0 && !t.isReloading) { if (this.ammo > 0) { t.isReloading = true; t.reloadProgress = 0; } continue; }
+            if (t.isReloading) continue;
+            let closest = null, cd = Infinity;
+            for (let e of this.enemies) { const d = Math.hypot(t.x - e.x, t.y - e.y); if (d < t.range && d < cd) { cd = d; closest = e; } }
+            if (closest) {
+                const dx = closest.x - t.x, dy = closest.y - t.y;
+                t.targetAngle = Math.atan2(dy, dx);
+                let diff = t.targetAngle - t.angle;
+                while (diff > Math.PI) diff -= Math.PI * 2;
+                while (diff < -Math.PI) diff += Math.PI * 2;
+                const maxRotate = t.rotateSpeed || 0.1;
+                if (Math.abs(diff) > 0.005) { const ra = Math.min(Math.abs(diff), maxRotate); t.angle += Math.sign(diff) * ra; }
+                else t.angle = t.targetAngle;
+                if (t.cooldown > 0) { t.cooldown--; continue; }
+                this.bullets.push({ x: t.x, y: t.y, target: closest, speed: 6.5, damage: t.damage, size: 4 });
+                t.ammo--;
+                this.updateStats();
+                t.cooldown = t.fireRate;
+            } else { if (t.cooldown > 0) t.cooldown--; }
+        }
+
+        for (let i = this.bullets.length - 1; i >= 0; i--) {
+            const b = this.bullets[i];
+            if (!b.target || !this.enemies.includes(b.target)) { this.bullets.splice(i, 1); continue; }
+            const dx = b.target.x - b.x, dy = b.target.y - b.y, dist = Math.hypot(dx, dy);
+            if (dist < 8) {
+                const target = b.target;
+                target.hp -= b.damage;
+                this.addDamageNumber(target.x, target.y - 20, b.damage, '#ffdd44');
+                if (target.hp <= 0) {
+                    const idx = this.enemies.indexOf(target);
+                    if (idx !== -1) {
+                        this.cash += target.reward || 3;
+                        this.updateStats();
+                        this.enemies.splice(idx, 1);
+                        this.totalKills++;
+                        if (!this.firstBloodDone) { this.firstBloodDone = true; unlockAchievement('first_blood'); }
+                        if (target.isBoss) {
+                            this.bossDefeated = true; this.bossActive = false;
+                            if (target.isBigBoss) { this.totalBigBossKills++; if (!this.firstBigBossDone) { this.firstBigBossDone = true; unlockAchievement('big_boss'); } }
+                            else { this.totalBossKills++; if (!this.firstBossDone) { this.firstBossDone = true; unlockAchievement('first_boss'); } }
+                        }
+                    }
+                }
+                this.bullets.splice(i, 1);
+            } else { const step = Math.min(b.speed, dist); b.x += (dx / dist) * step; b.y += (dy / dist) * step; }
+        }
+
+        for (let i = this.damageNumbers.length - 1; i >= 0; i--) {
+            const dn = this.damageNumbers[i];
+            dn.life--;
+            if (dn.life <= 0) this.damageNumbers.splice(i, 1);
+        }
+        for (let i = this.fireTrails.length - 1; i >= 0; i--) {
+            this.fireTrails[i].life--;
+            if (this.fireTrails[i].life <= 0) this.fireTrails.splice(i, 1);
+        }
+        this.updateStats();
+    }
+
+    addDamageNumber(x, y, amount, color) { this.damageNumbers.push({ x: x, y: y, amount: Math.floor(amount), color: color || '#ffdd44', life: 30 }); }
+
+    drawGrid() {
+        const ctx = this.ctx;
+        const colors = this.mapColors || { path: '#3f506e', bg: '#1b2537' };
+        for (let r = 0; r < this.ROWS; r++) {
+            for (let c = 0; c < this.COLS; c++) {
+                const x = c * this.CELL, y = r * this.CELL;
+                const isPath = this.isPathCell(c, r);
+                if (isPath) {
+                    ctx.fillStyle = colors.path;
+                    ctx.fillRect(x, y, this.CELL - 1, this.CELL - 1);
+                    const grad = ctx.createRadialGradient(x + this.CELL / 2, y + this.CELL / 2, 2, x + this.CELL / 2, y + this.CELL / 2, this.CELL / 2);
+                    grad.addColorStop(0, lightenColor(colors.path, 25));
+                    grad.addColorStop(0.7, colors.path);
+                    grad.addColorStop(1, darkenColor(colors.path, 20));
+                    ctx.fillStyle = grad;
+                    ctx.fillRect(x + 2, y + 2, this.CELL - 5, this.CELL - 5);
+                    ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+                    ctx.lineWidth = 1;
+                    ctx.strokeRect(x + 2.5, y + 2.5, this.CELL - 6, this.CELL - 6);
+                } else {
+                    ctx.fillStyle = colors.bg;
+                    ctx.fillRect(x, y, this.CELL - 1, this.CELL - 1);
+                    const grad = ctx.createRadialGradient(x + this.CELL / 2, y + this.CELL / 2, 2, x + this.CELL / 2, y + this.CELL / 2, this.CELL / 2);
+                    grad.addColorStop(0, lightenColor(colors.bg, 12));
+                    grad.addColorStop(0.7, colors.bg);
+                    grad.addColorStop(1, darkenColor(colors.bg, 15));
+                    ctx.fillStyle = grad;
+                    ctx.fillRect(x + 1, y + 1, this.CELL - 3, this.CELL - 3);
+                    ctx.strokeStyle = 'rgba(0,0,0,0.25)';
+                    ctx.lineWidth = 1;
+                    ctx.strokeRect(x + 1.5, y + 1.5, this.CELL - 4, this.CELL - 4);
+                }
+            }
+        }
+        if (this.isDualLane) {
+            const ctx2 = this.ctx;
+            ctx2.font = 'bold 11px sans-serif';
+            ctx2.textAlign = 'center';
+            ctx2.textBaseline = 'bottom';
+            const topStart = this.waypointsTop[0];
+            const bottomStart = this.waypointsBottom[0];
+            ctx2.fillStyle = '#ff8844';
+            ctx2.fillText('↑ Top Lane', topStart.x * this.CELL + this.CELL / 2, topStart.y * this.CELL - 4);
+            ctx2.fillStyle = '#88ddff';
+            ctx2.fillText('↓ Bottom Lane', bottomStart.x * this.CELL + this.CELL / 2, bottomStart.y * this.CELL - 4);
+        }
+    }
+
+    drawStartEnd() {
+        const ctx = this.ctx;
+        const start = this.waypoints[0];
+        const end = this.waypoints[this.waypoints.length - 1];
+        ctx.save();
+        ctx.shadowBlur = 20;
+        ctx.shadowColor = '#4fc3a0';
+        ctx.fillStyle = '#4fc3a0';
+        ctx.beginPath();
+        ctx.arc(start.x * this.CELL + this.CELL / 2, start.y * this.CELL + this.CELL / 2, 13, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+        ctx.fillStyle = '#0b0f1a';
+        ctx.font = 'bold 14px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('S', start.x * this.CELL + this.CELL / 2, start.y * this.CELL + this.CELL / 2);
+        ctx.save();
+        ctx.shadowBlur = 20;
+        ctx.shadowColor = '#e0645a';
+        ctx.fillStyle = '#e0645a';
+        ctx.beginPath();
+        ctx.arc(end.x * this.CELL + this.CELL / 2, end.y * this.CELL + this.CELL / 2, 13, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+        ctx.fillStyle = '#0b0f1a';
+        ctx.fillText('E', end.x * this.CELL + this.CELL / 2, end.y * this.CELL + this.CELL / 2);
+    }
+
+    drawTower(t) {
+        const ctx = this.ctx;
+        if (t.isRetrieving) ctx.globalAlpha = 0.5;
+        ctx.save();
+        ctx.translate(t.x, t.y);
+
+        if (t.isBarrier) { this.drawBarrier(t); ctx.restore(); ctx.globalAlpha = 1; return; }
+        if (t.isSpike) { this.drawSpike(t); ctx.restore(); ctx.globalAlpha = 1; return; }
+        if (t.isTaunt) { this.drawTauntTower(t); ctx.restore(); ctx.globalAlpha = 1; return; }
+        if (t.isShield) { this.drawShieldTower(t); ctx.restore(); ctx.globalAlpha = 1; return; }
+        if (t.type === 'sniper') { this.drawSniperTower(t); ctx.restore(); ctx.globalAlpha = 1; return; }
+        if (t.type === 'control') { this.drawControlTower(t); ctx.restore(); ctx.globalAlpha = 1; return; }
+        if (t.type === 'bomb') { this.drawBombTower(t); ctx.restore(); ctx.globalAlpha = 1; return; }
+
+        const s = 18;
+        const visualAngle = t.angle - Math.PI / 2;
+        if (t.isLocked && !t.isRetrieving) {
+            ctx.setLineDash([6, 8]);
+            ctx.strokeStyle = 'rgba(106,154,122,0.4)';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.arc(0, 0, t.range, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.setLineDash([]);
+        }
+
+        ctx.beginPath();
+        ctx.arc(0, 2, s + 2, 0, Math.PI * 2);
+        const grad = ctx.createRadialGradient(-4, -2, 4, 0, 0, s + 4);
+        grad.addColorStop(0, '#5a6a7a');
+        grad.addColorStop(0.6, '#3a4a5a');
+        grad.addColorStop(1, '#1a2a3a');
+        ctx.fillStyle = grad;
+        ctx.fill();
+        ctx.strokeStyle = '#6a8a9a';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        ctx.strokeStyle = '#4a5a6a';
+        ctx.lineWidth = 1;
+        for (let i = 0; i < 8; i++) {
+            const a = (i / 8) * Math.PI * 2 + Date.now() / 3000;
+            const r1 = s - 2, r2 = s + 2;
+            ctx.beginPath();
+            ctx.moveTo(Math.cos(a) * r1, 2 + Math.sin(a) * r1);
+            ctx.lineTo(Math.cos(a) * r2, 2 + Math.sin(a) * r2);
+            ctx.stroke();
+        }
+
+        ctx.save();
+        ctx.rotate(visualAngle);
+        const baseColor = t.color || '#4a5a4a';
+        ctx.shadowBlur = 8;
+        ctx.shadowColor = '#2a3a4a';
+        ctx.beginPath();
+        ctx.moveTo(-s + 2, 4);
+        ctx.lineTo(-4, s + 4);
+        ctx.lineTo(4, s + 4);
+        ctx.lineTo(s - 2, 4);
+        ctx.closePath();
+        const grad2 = ctx.createLinearGradient(0, -s - 8, 0, 4);
+        grad2.addColorStop(0, lightenColor(baseColor, 30));
+        grad2.addColorStop(0.5, baseColor);
+        grad2.addColorStop(1, darkenColor(baseColor, 30));
+        ctx.fillStyle = grad2;
+        ctx.fill();
+        ctx.strokeStyle = '#8a9a8a';
+        ctx.lineWidth = 1.8;
+        ctx.stroke();
+
+        const barrelLen = 20;
+        ctx.shadowBlur = 6;
+        ctx.fillStyle = darkenColor(baseColor, 20);
+        ctx.fillRect(-4, s + 2, 8, barrelLen);
+        ctx.fillStyle = baseColor;
+        ctx.fillRect(-5, s + 10, 10, 3);
+        ctx.fillRect(-5, s + 18, 10, 3);
+        ctx.fillStyle = lightenColor(baseColor, 20);
+        ctx.fillRect(-3, s + 4, 6, 4);
+        ctx.fillStyle = darkenColor(baseColor, 40);
+        ctx.fillRect(-7, s + barrelLen + 2, 14, 5);
+        ctx.shadowBlur = 0;
+        ctx.restore();
+
+        ctx.fillStyle = '#ffd866';
+        ctx.font = 'bold 9px monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'bottom';
+        ctx.fillText('Lv' + (t.level || 1), 0, -s - 6);
+
+        const hpPercent = Math.max(0, Math.min(1, t.hp / t.maxHp));
+        const barW = 30, barX = -barW / 2, barY = s + 6;
+        ctx.fillStyle = '#0f1623';
+        ctx.fillRect(barX, barY, barW, 4);
+        ctx.fillStyle = hpPercent > 0.6 ? '#6fdf8b' : (hpPercent > 0.3 ? '#f5b042' : '#e64539');
+        ctx.fillRect(barX, barY, barW * hpPercent, 4);
+        ctx.strokeStyle = '#3a4a5a';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(barX, barY, barW, 4);
+
+        if (t.isRetrieving) {
+            const progress = t.retrieveProgress / this.RETRIEVE_DURATION;
+            ctx.shadowBlur = 20;
+            ctx.shadowColor = '#ff8844';
+            ctx.strokeStyle = '#ff8844';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.arc(0, 0, s + 8, -Math.PI / 2, -Math.PI / 2 + progress * Math.PI * 2);
+            ctx.stroke();
+            const remaining = Math.ceil((this.RETRIEVE_DURATION - t.retrieveProgress) / 60);
+            ctx.shadowBlur = 0;
+            ctx.fillStyle = '#ff8844';
+            ctx.font = 'bold 14px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(remaining + 's', 0, s + 18);
+        }
+
+        ctx.restore();
+        ctx.globalAlpha = 1;
+    }
+
+    drawBarrier(t) {
+        const ctx = this.ctx;
+        const s = 18;
+        ctx.shadowBlur = 12;
+        ctx.shadowColor = '#5a4a3a';
+        const grad = ctx.createRadialGradient(0, 0, 6, 0, 0, s + 4);
+        grad.addColorStop(0, '#8a7a5a');
+        grad.addColorStop(0.6, '#6a5a3a');
+        grad.addColorStop(1, '#3a2a1a');
+        ctx.beginPath();
+        ctx.arc(0, 0, s + 4, 0, Math.PI * 2);
+        ctx.fillStyle = grad;
+        ctx.fill();
+        ctx.strokeStyle = '#aa9a7a';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        for (let i = 0; i < 4; i++) {
+            const angle = i * Math.PI / 2;
+            const rx = s * 0.7, ry = s * 0.5;
+            ctx.save();
+            ctx.rotate(angle);
+            ctx.fillStyle = '#5a4a2a';
+            ctx.fillRect(-rx, -3, rx * 2, 6);
+            ctx.fillStyle = '#7a6a4a';
+            ctx.fillRect(-rx + 4, -4, 8, 8);
+            ctx.restore();
+        }
+        ctx.fillStyle = '#9a8a6a';
+        ctx.font = '28px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('🧱', 0, -2);
+        const hpPct = t.barrierHp / t.maxBarrierHp;
+        const bw = 36, bx = -bw / 2, by = s + 10;
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = '#0f1623';
+        ctx.fillRect(bx, by, bw, 5);
+        ctx.fillStyle = hpPct > 0.6 ? '#6fdf8b' : (hpPct > 0.3 ? '#f5b042' : '#e64539');
+        ctx.fillRect(bx, by, bw * hpPct, 5);
+        ctx.strokeStyle = '#6a7a6a';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(bx, by, bw, 5);
+        ctx.fillStyle = '#aaa';
+        ctx.font = '9px monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'bottom';
+        ctx.fillText(Math.ceil(t.barrierHp) + '/' + t.maxBarrierHp, 0, by - 2);
+    }
+
+    drawSpike(t) {
+        const ctx = this.ctx;
+        const s = 14;
+        const grad = ctx.createRadialGradient(0, 0, 4, 0, 0, s + 4);
+        grad.addColorStop(0, '#8a6a4a');
+        grad.addColorStop(0.6, '#6a4a3a');
+        grad.addColorStop(1, '#3a2a1a');
+        ctx.beginPath();
+        ctx.arc(0, 0, s + 4, 0, Math.PI * 2);
+        ctx.fillStyle = grad;
+        ctx.fill();
+        ctx.strokeStyle = '#8a6a4a';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        const spikeCount = 5 + (t.level || 1) * 1;
+        const rangeBonus = t.skillActive ? 1.5 : 1;
+        for (let i = 0; i < spikeCount; i++) {
+            const angle = (i / spikeCount) * Math.PI * 2 + Date.now() / 2000;
+            const len = (s + 4 + (t.level || 1) * 1.5) * rangeBonus;
+            const inner = s * 0.4;
+            ctx.beginPath();
+            ctx.moveTo(Math.cos(angle - 0.12) * inner, Math.sin(angle - 0.12) * inner);
+            ctx.lineTo(Math.cos(angle) * len, Math.sin(angle) * len);
+            ctx.lineTo(Math.cos(angle + 0.12) * inner, Math.sin(angle + 0.12) * inner);
+            ctx.closePath();
+            const grad2 = ctx.createRadialGradient(0, 0, 0, 0, 0, len);
+            grad2.addColorStop(0, '#dd8844');
+            grad2.addColorStop(0.5, '#cc7733');
+            grad2.addColorStop(1, '#884422');
+            ctx.fillStyle = grad2;
+            ctx.fill();
+            ctx.strokeStyle = '#aa6633';
+            ctx.lineWidth = 0.5;
+            ctx.stroke();
+        }
+        const pulse = Math.sin(Date.now() / 600) * 0.2 + 0.8;
+        ctx.shadowBlur = 20;
+        ctx.shadowColor = 'rgba(255, 136, 68, ' + (0.3 * pulse) + ')';
+        ctx.beginPath();
+        ctx.arc(0, 0, 6 * pulse, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255, 200, 100, ' + (0.2 * pulse) + ')';
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = '#ffd866';
+        ctx.font = '8px monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'bottom';
+        ctx.fillText('Lv' + (t.level || 1), 0, -s - 8);
+    }
+
+    drawTauntTower(t) {
+        const ctx = this.ctx;
+        const s = 16;
+        const pulse = Math.sin(Date.now() / 500) * 0.15 + 0.85;
+        ctx.shadowBlur = 25;
+        ctx.shadowColor = '#cc448860';
+        const grad = ctx.createRadialGradient(0, 0, 4, 0, 0, s + 4);
+        grad.addColorStop(0, '#cc4488');
+        grad.addColorStop(0.5, '#aa3366');
+        grad.addColorStop(1, '#662244');
+        ctx.beginPath();
+        ctx.arc(0, 0, s + 4, 0, Math.PI * 2);
+        ctx.fillStyle = grad;
+        ctx.fill();
+        ctx.strokeStyle = '#ff66aa';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.shadowBlur = 30;
+        ctx.shadowColor = '#ff66aa40';
+        ctx.strokeStyle = 'rgba(255,102,170,' + (0.3 * pulse) + ')';
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([4, 6]);
+        ctx.beginPath();
+        ctx.arc(0, 0, (s + 6) * pulse, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = '#ff66aa';
+        ctx.font = '28px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('🎯', 0, -2);
+        const hpPercent = t.hp / t.maxHp;
+        const barW = 28, barX = -barW / 2, barY = s + 8;
+        ctx.fillStyle = '#0f1623';
+        ctx.fillRect(barX, barY, barW, 4);
+        ctx.fillStyle = hpPercent > 0.6 ? '#6fdf8b' : (hpPercent > 0.3 ? '#f5b042' : '#e64539');
+        ctx.fillRect(barX, barY, barW * hpPercent, 4);
+        ctx.fillStyle = '#ffd866';
+        ctx.font = '7px monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'bottom';
+        ctx.fillText('❤️' + Math.ceil(t.hp), 0, barY - 2);
+    }
+
+    drawShieldTower(t) {
+        const ctx = this.ctx;
+        const s = 20;
+        const pulse = Math.sin(Date.now() / 800) * 0.2 + 0.8;
+        ctx.shadowBlur = 30;
+        ctx.shadowColor = '#44aacc60';
+        ctx.beginPath();
+        ctx.arc(0, 0, s + 8 * pulse, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(68,170,204,' + (0.08 * pulse) + ')';
+        ctx.fill();
+        ctx.shadowBlur = 12;
+        ctx.shadowColor = '#3a4a5a80';
+        const grad = ctx.createRadialGradient(0, 0, 4, 0, 0, s + 4);
+        grad.addColorStop(0, '#5a8a9a');
+        grad.addColorStop(0.5, '#3a6a7a');
+        grad.addColorStop(1, '#1a4a5a');
+        ctx.beginPath();
+        ctx.arc(0, 0, s + 4, 0, Math.PI * 2);
+        ctx.fillStyle = grad;
+        ctx.fill();
+        ctx.strokeStyle = '#6a9aaa';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        const shieldPercent = t.shieldHp / t.maxShieldHp;
+        const barW = 34, barX = -barW / 2, barY = s + 12;
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = '#0f1623';
+        ctx.fillRect(barX, barY, barW, 5);
+        ctx.fillStyle = shieldPercent > 0.6 ? '#44ddff' : (shieldPercent > 0.3 ? '#ffcc44' : '#ff6644');
+        ctx.fillRect(barX, barY, barW * shieldPercent, 5);
+        ctx.strokeStyle = '#44aacc60';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(barX, barY, barW, 5);
+        ctx.font = '9px monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'bottom';
+        ctx.fillStyle = '#88ddff80';
+        ctx.fillText(Math.ceil(t.shieldHp) + '/' + t.maxShieldHp, 0, barY - 2);
+    }
+
+    drawSniperTower(t) {
+        const ctx = this.ctx;
+        const s = 20;
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = '#3a4a5a80';
+        const grad = ctx.createRadialGradient(0, 0, 4, 0, 0, s + 4);
+        grad.addColorStop(0, '#6a7a8a');
+        grad.addColorStop(0.5, '#4a5a6a');
+        grad.addColorStop(1, '#2a3a4a');
+        ctx.beginPath();
+        ctx.arc(0, 0, s + 4, 0, Math.PI * 2);
+        ctx.fillStyle = grad;
+        ctx.fill();
+        ctx.strokeStyle = '#8a9aaa';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        ctx.save();
+        ctx.rotate(t.angle + Math.PI / 2);
+        ctx.shadowBlur = 6;
+        ctx.fillStyle = '#3a4a3a';
+        ctx.fillRect(-4, -s - 8, 8, 16);
+        ctx.fillStyle = '#5a6a5a';
+        ctx.fillRect(-3, -s - 10, 6, 4);
+        ctx.fillStyle = '#2a3a2a';
+        ctx.fillRect(-5, -s - 12, 10, 4);
+        ctx.fillStyle = '#6a7a6a';
+        ctx.fillRect(-4, -s - 11, 8, 2);
+        ctx.fillStyle = '#3a4a3a';
+        ctx.fillRect(-12, -2, 4, 4);
+        ctx.fillRect(8, -2, 4, 4);
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = '#6a9a8a';
+        ctx.beginPath();
+        ctx.arc(0, -s - 10, 4, 0, Math.PI * 2);
+        ctx.fillStyle = '#2a4a3a';
+        ctx.fill();
+        ctx.fillStyle = '#6aaa7a';
+        ctx.beginPath();
+        ctx.arc(0, -s - 10, 2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+        ctx.shadowBlur = 0;
+        if (t.isLocked && !t.isRetrieving) {
+            ctx.setLineDash([6, 8]);
+            ctx.strokeStyle = 'rgba(106,154,122,0.25)';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.arc(0, 0, t.range, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.setLineDash([]);
+        }
+        ctx.font = '12px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        ctx.fillStyle = '#aac8ff80';
+        ctx.fillText('🔭', 0, -s - 18);
+        ctx.fillStyle = '#ffd866';
+        ctx.font = '8px monospace';
+        ctx.textBaseline = 'bottom';
+        ctx.fillText('Lv' + (t.level || 1), 0, -s - 22);
+    }
+
+    drawControlTower(t) {
+        const ctx = this.ctx;
+        const s = 18;
+        const pulse = Math.sin(Date.now() / 600) * 0.3 + 0.7;
+        ctx.shadowBlur = 30;
+        ctx.shadowColor = '#4488ff40';
+        ctx.beginPath();
+        ctx.arc(0, 0, s + 8 * pulse, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(68,136,255,' + (0.05 * pulse) + ')';
+        ctx.fill();
+        ctx.shadowBlur = 12;
+        const grad = ctx.createRadialGradient(0, 0, 4, 0, 0, s + 4);
+        grad.addColorStop(0, '#4a6a8a');
+        grad.addColorStop(0.5, '#2a4a6a');
+        grad.addColorStop(1, '#1a2a4a');
+        ctx.beginPath();
+        ctx.arc(0, 0, s + 4, 0, Math.PI * 2);
+        ctx.fillStyle = grad;
+        ctx.fill();
+        ctx.strokeStyle = '#6a8aaa';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        ctx.save();
+        ctx.rotate(t.angle + Math.PI / 2);
+        ctx.fillStyle = '#2a4a6a';
+        ctx.fillRect(-6, -s - 4, 12, 8);
+        ctx.fillStyle = '#4a8aaa';
+        ctx.fillRect(-4, -s - 6, 8, 4);
+        ctx.fillStyle = '#6aaacc';
+        ctx.fillRect(-2, -s - 8, 4, 4);
+        ctx.restore();
+        ctx.font = '14px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        ctx.fillStyle = '#88ccff80';
+        ctx.fillText('🌀', 0, -s - 16);
+        if (t.isLocked && !t.isRetrieving) {
+            ctx.setLineDash([4, 8]);
+            ctx.strokeStyle = '#4488ff30';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.arc(0, 0, t.range, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.setLineDash([]);
+        }
+        ctx.fillStyle = '#ffd866';
+        ctx.font = '8px monospace';
+        ctx.textBaseline = 'bottom';
+        ctx.fillText('Lv' + (t.level || 1), 0, -s - 20);
+    }
+
+    drawBombTower(t) {
+        const ctx = this.ctx;
+        const s = 22;
+        ctx.shadowBlur = 20;
+        ctx.shadowColor = '#ff440060';
+        const grad = ctx.createRadialGradient(0, 0, 6, 0, 0, s + 8);
+        grad.addColorStop(0, '#ff8844');
+        grad.addColorStop(0.4, '#cc6622');
+        grad.addColorStop(0.8, '#884422');
+        grad.addColorStop(1, '#442211');
+        ctx.beginPath();
+        ctx.arc(0, 0, s + 8, 0, Math.PI * 2);
+        ctx.fillStyle = grad;
+        ctx.fill();
+        ctx.strokeStyle = '#ff8844';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.save();
+        ctx.rotate(t.angle + Math.PI / 2);
+        ctx.fillStyle = '#664433';
+        ctx.fillRect(-7, -s - 14, 14, 24);
+        ctx.fillStyle = '#886644';
+        ctx.fillRect(-6, -s - 16, 12, 5);
+        ctx.fillStyle = '#442211';
+        ctx.fillRect(-9, -s - 18, 18, 7);
+        ctx.fillStyle = '#ff8844';
+        ctx.fillRect(-7, -s - 17, 14, 4);
+        ctx.restore();
+        ctx.font = '18px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        ctx.fillStyle = '#ff884480';
+        ctx.fillText('💣', 0, -s - 24);
+        if (t.isLocked && !t.isRetrieving) {
+            ctx.setLineDash([8, 12]);
+            ctx.strokeStyle = '#ff440030';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(0, 0, t.range, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.setLineDash([]);
+        }
+        ctx.fillStyle = '#ffd866';
+        ctx.font = '8px monospace';
+        ctx.textBaseline = 'bottom';
+        ctx.fillText('Lv' + (t.level || 1), 0, -s - 28);
+    }
+
+    drawEnemy(e) {
+        const ctx = this.ctx;
+        const hpPercent = e.hp / e.maxHp;
+
+        if (e.isBoss) {
+            ctx.save();
+            ctx.shadowColor = e.isBigBoss ? '#ff0000' : '#ff6644';
+            ctx.shadowBlur = 50;
+            ctx.beginPath();
+            ctx.arc(e.x, e.y, e.size + 16, 0, Math.PI * 2);
+            const grad = ctx.createRadialGradient(e.x, e.y, e.size, e.x, e.y, e.size + 16);
+            grad.addColorStop(0, e.isBigBoss ? 'rgba(255,0,0,0.25)' : 'rgba(255,100,50,0.2)');
+            grad.addColorStop(1, 'rgba(255,68,68,0)');
+            ctx.fillStyle = grad;
+            ctx.fill();
+            ctx.fillStyle = e.isBigBoss ? '#ff0000' : '#ff6644';
+            ctx.font = e.isBigBoss ? 'bold 34px sans-serif' : 'bold 26px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(e.isBigBoss ? '👑' : '⚔️', e.x, e.y - e.size - 24);
+            ctx.restore();
+        }
+
+        ctx.save();
+        ctx.shadowBlur = 12;
+        ctx.shadowColor = e.isBoss ? (e.isBigBoss ? '#ff0000' : '#ff6644') : '#ff7b6b';
+        ctx.beginPath();
+        ctx.arc(e.x, e.y, e.size, 0, Math.PI * 2);
+        const bodyGrad = ctx.createRadialGradient(e.x - e.size * 0.3, e.y - e.size * 0.3, e.size * 0.1, e.x, e.y, e.size);
+        bodyGrad.addColorStop(0, lightenColor(e.color || '#e64539', 40));
+        bodyGrad.addColorStop(0.6, e.color || '#e64539');
+        bodyGrad.addColorStop(1, darkenColor(e.color || '#e64539', 30));
+        ctx.fillStyle = bodyGrad;
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+
+        const eyeOff = e.isBoss ? (e.isBigBoss ? 8 : 6) : 4;
+        ctx.fillStyle = '#fff';
+        ctx.beginPath();
+        ctx.arc(e.x - eyeOff, e.y - 3, eyeOff, 0, Math.PI * 2);
+        ctx.arc(e.x + eyeOff, e.y - 3, eyeOff, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#0b0f1a';
+        ctx.beginPath();
+        ctx.arc(e.x - eyeOff, e.y - 3, eyeOff * 0.5, 0, Math.PI * 2);
+        ctx.arc(e.x + eyeOff, e.y - 3, eyeOff * 0.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.restore();
+
+        const barW = e.isBoss ? (e.isBigBoss ? 50 : 40) : 24;
+        const barX = e.x - barW / 2;
+        const barY = e.y - e.size - 8;
+        ctx.save();
+        ctx.fillStyle = 'rgba(0,0,0,0.6)';
+        ctx.fillRect(barX - 1, barY - 1, barW + 2, e.isBoss ? 8 : 6);
+        ctx.fillStyle = '#0f1623';
+        ctx.fillRect(barX, barY, barW, e.isBoss ? 6 : 4);
+        ctx.fillStyle = hpPercent > 0.6 ? '#6fdf8b' : (hpPercent > 0.3 ? '#f5b042' : '#e64539');
+        ctx.fillRect(barX, barY, barW * hpPercent, e.isBoss ? 6 : 4);
+        if (e.isBoss) {
+            ctx.strokeStyle = e.isBigBoss ? '#ff000080' : '#ff664480';
+            ctx.lineWidth = 1.5;
+            ctx.strokeRect(barX - 1, barY - 1, barW + 2, 8);
+        }
+        ctx.restore();
+    }
+
+    render() {
+        const ctx = this.ctx;
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.globalAlpha = 1;
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.shadowBlur = 0;
+        ctx.shadowColor = 'transparent';
+        ctx.setLineDash([]);
+        ctx.lineWidth = 1;
+        ctx.clearRect(0, 0, 800, 600);
+
+        this.drawGrid();
+
+        for (let ft of this.fireTrails) {
+            const alpha = ft.life / ft.maxLife;
+            ctx.save();
+            ctx.shadowBlur = 20;
+            ctx.shadowColor = 'rgba(255, 68, 0, ' + (alpha * 0.5) + ')';
+            ctx.beginPath();
+            ctx.arc(ft.x, ft.y, 12 * alpha, 0, Math.PI * 2);
+            const grad = ctx.createRadialGradient(ft.x, ft.y, 0, ft.x, ft.y, 12 * alpha);
+            grad.addColorStop(0, 'rgba(255, 200, 100, ' + (alpha * 0.8) + ')');
+            grad.addColorStop(0.5, 'rgba(255, 100, 40, ' + (alpha * 0.5) + ')');
+            grad.addColorStop(1, 'rgba(200, 50, 0, 0)');
+            ctx.fillStyle = grad;
+            ctx.fill();
+            ctx.restore();
+        }
+
+        this.drawStartEnd();
+
+        for (let t of this.towers) this.drawTower(t);
+        for (let e of this.enemies) this.drawEnemy(e);
+
+        for (let b of this.bullets) {
+            ctx.save();
+            ctx.shadowBlur = 20;
+            ctx.shadowColor = b.color || '#ffdd44';
+            ctx.fillStyle = b.color || '#ffee88';
+            ctx.beginPath();
+            ctx.arc(b.x, b.y, b.size + 2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#ffaa33';
+            ctx.beginPath();
+            ctx.arc(b.x, b.y, b.size, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+        }
+
+        for (let dn of this.damageNumbers) {
+            const alpha = dn.life / dn.maxLife;
+            ctx.save();
+            ctx.globalAlpha = alpha;
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = '#00000080';
+            ctx.font = 'bold 18px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillStyle = dn.color;
+            ctx.fillText('-' + dn.amount, dn.x, dn.y);
+            ctx.restore();
+        }
+
+        if (this.gameOver) {
+            ctx.save();
+            ctx.fillStyle = 'rgba(11,15,26,0.88)';
+            ctx.fillRect(0, 0, 800, 600);
+            ctx.fillStyle = '#f0b3b3';
+            ctx.font = 'bold 56px system-ui, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('💀 Defenses Breached', 400, 260);
+            ctx.fillStyle = '#c0d0f0';
+            ctx.font = '26px sans-serif';
+            ctx.fillText('Click "Restart" to try again', 400, 370);
+            ctx.restore();
+        }
+
+        ctx.save();
+        ctx.fillStyle = '#deecff';
+        ctx.font = 'bold 18px monospace';
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'top';
+        const bossInfo = this.bossActive ? (this.isBigBoss ? ' 👑BIG BOSS' : ' ⚔️MINI BOSS') : '';
+        ctx.fillText('Wave ' + this.wave + ' · Enemies ' + this.enemies.length + bossInfo, 780, 12);
+        ctx.restore();
+    }
+
+    bindUIEvents() {
+        if (this.ui.robotShopBtn) this.ui.robotShopBtn.addEventListener('click', () => { this.buyRobot(); });
+        if (this.ui.ammoShopBtn) this.ui.ammoShopBtn.addEventListener('click', () => {
+            if (this.cash < 300) { showToast('❌ Not enough gold!'); return; }
+            this.cash -= 300; this.ammo += 300; this.updateStats();
+            showToast('🔫 Ammo clip +300');
+        });
+        if (this.ui.shopBtn) this.ui.shopBtn.addEventListener('click', () => {
+            this.shopOpen = !this.shopOpen;
+            this.ui.shopPanel.classList.toggle('open', this.shopOpen);
+            this.updateShopPrices();
+        });
+        if (this.ui.premiumBtn) this.ui.premiumBtn.addEventListener('click', () => {
+            this.premiumOpen = !this.premiumOpen;
+            this.ui.premiumPanel.classList.toggle('open', this.premiumOpen);
+            this.renderPremiumStats();
+        });
+        if (this.ui.cardBtn) this.ui.cardBtn.addEventListener('click', () => {
+            this.cardOpen = !this.cardOpen;
+            this.ui.cardPanel.classList.toggle('open', this.cardOpen);
+            this.renderCards();
+        });
+        if (this.ui.bagBtn) this.ui.bagBtn.addEventListener('click', () => {
+            this.bagOpen = !this.bagOpen;
+            this.ui.bagPanel.classList.toggle('open', this.bagOpen);
+            this.updateBagUI();
+        });
+        if (this.ui.batchBtn) this.ui.batchBtn.addEventListener('click', () => { this.toggleBatchMode(); });
+        if (this.ui.restartBtn) this.ui.restartBtn.addEventListener('click', () => {
+            if (this.wave > 0) {
+                if (!this.gameOver) settleGameRewards(this);
+                else recordGameStats(this.mapId, this.wave, this.medals, { kills: this.totalKills || 0, bossKills: this.totalBossKills || 0, bigBossKills: this.totalBigBossKills || 0, towersBuilt: this.totalTowersBuilt || 0, cardsUsed: this.totalCardsUsed || 0, medaledTowers: this.totalMedaledTowers || 0 });
+            }
+            this.init();
+        });
+    }
+
+    loop() { if (this.gameOver) { this.render(); return; } this.update(); this.render(); this.animationId = requestAnimationFrame(() => this.loop()); }
+}
+
+function setupAllEventListeners() {
+    safeBind('registerCard', 'click', function() {
+        const ni = document.getElementById('registerNameInput'); if (ni) ni.value = '';
+        const pi = document.getElementById('registerPasswordInput'); if (pi) pi.value = '';
+        const pc = document.getElementById('registerPasswordConfirm'); if (pc) pc.value = '';
+        const er = document.getElementById('registerError'); if (er) er.textContent = '';
+        document.getElementById('registerOverlay').classList.add('visible');
+    });
+    safeBind('codeLoginCard', 'click', function() {
+        const ci = document.getElementById('codeLoginInput'); if (ci) ci.value = '';
+        const er = document.getElementById('codeLoginError'); if (er) er.textContent = '';
+        document.getElementById('codeLoginOverlay').classList.add('visible');
+    });
+    safeBind('fileLoginCard', 'click', function() {
+        const er = document.getElementById('fileLoginError'); if (er) er.textContent = '';
+        document.getElementById('fileLoginOverlay').classList.add('visible');
+    });
+    safeBind('registerCancelBtn', 'click', () => document.getElementById('registerOverlay').classList.remove('visible'));
+    safeBind('codeLoginCancelBtn', 'click', () => document.getElementById('codeLoginOverlay').classList.remove('visible'));
+    safeBind('fileLoginCancelBtn', 'click', () => document.getElementById('fileLoginOverlay').classList.remove('visible'));
+    safeBind('confirmPasswordCancelBtn', 'click', () => { document.getElementById('passwordConfirmOverlay').classList.remove('visible'); pendingSaveData = null; });
+
+    safeBind('registerConfirmBtn', 'click', function() {
+        const name = document.getElementById('registerNameInput').value.trim();
+        let password = document.getElementById('registerPasswordInput').value.trim();
+        const confirmPwd = document.getElementById('registerPasswordConfirm').value.trim();
+        const errEl = document.getElementById('registerError');
+        if (!name) { errEl.textContent = '❌ Please enter an account name'; return; }
+        if (name.length > 20) { errEl.textContent = '❌ Name cannot exceed 20 characters'; return; }
+        if (name === 'Player') { errEl.textContent = '❌ That name is not available'; return; }
+        if (!password) password = '000000';
+        if (password !== confirmPwd && confirmPwd !== '') { errEl.textContent = '❌ Passwords do not match'; return; }
+        accountData = createNewAccountData(name, password);
+        accountData.level = 1;
+        saveAccountLocal();
+        document.getElementById('registerOverlay').classList.remove('visible');
+        document.getElementById('welcomeScreen').classList.remove('visible');
+        mainMenu.classList.add('visible');
+        const nameInput = document.getElementById('accountNameInput');
+        if (nameInput) nameInput.value = name;
+        updateAccountUI(); updateLevelUI(); updateAchievementUI();
+        showToast('🎉 Registration successful! Welcome ' + name + ', received 20000💰 + full tower set');
+    });
+
+    safeBind('codeLoginNextBtn', 'click', function() {
+        const code = document.getElementById('codeLoginInput').value.trim();
+        const errEl = document.getElementById('codeLoginError');
+        if (!code) { errEl.textContent = '❌ Please enter a save code'; return; }
+        const data = decodeAccountData(code);
+        if (!data) { errEl.textContent = '❌ Invalid save code'; return; }
+        pendingSaveData = data;
+        showPasswordConfirmPanel(data);
+        document.getElementById('codeLoginOverlay').classList.remove('visible');
+    });
+
+    const fileDropZone = document.getElementById('fileDropZone');
+    const fileLoginInput = document.getElementById('fileLoginInput');
+    if (fileDropZone && fileLoginInput) {
+        fileDropZone.addEventListener('click', () => fileLoginInput.click());
+        fileLoginInput.addEventListener('change', function() {
+            const file = this.files && this.files[0];
+            if (file) handleSaveFile(file);
+            this.value = '';
+        });
+        fileDropZone.addEventListener('dragover', (e) => { e.preventDefault(); fileDropZone.classList.add('dragover'); });
+        fileDropZone.addEventListener('dragleave', (e) => { e.preventDefault(); fileDropZone.classList.remove('dragover'); });
+        fileDropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            fileDropZone.classList.remove('dragover');
+            const file = e.dataTransfer.files && e.dataTransfer.files[0];
+            if (file) handleSaveFile(file);
+        });
+    }
+
+    safeBind('confirmPasswordConfirmBtn', 'click', function() {
+        const errEl = document.getElementById('confirmPasswordError');
+        if (!pendingSaveData) { errEl.textContent = '❌ Save data lost'; return; }
+        const password = document.getElementById('confirmPasswordInput').value.trim() || '000000';
+        const savedPassword = pendingSaveData.password || '000000';
+        if (password !== savedPassword) { errEl.textContent = '❌ Wrong password, please try again'; return; }
+        applyAccountData(pendingSaveData);
+        saveAccountLocal();
+        pendingSaveData = null;
+        document.getElementById('passwordConfirmOverlay').classList.remove('visible');
+        document.getElementById('welcomeScreen').classList.remove('visible');
+        mainMenu.classList.add('visible');
+        const nameInput = document.getElementById('accountNameInput');
+        if (nameInput) nameInput.value = accountData.name || '';
+        updateAccountUI(); updateLevelUI(); updateAchievementUI();
+        showToast('✅ Login successful! Welcome back, ' + (accountData.name || 'Player'));
+    });
+    safeBind('confirmPasswordInput', 'keydown', function(e) { if (e.key === 'Enter') document.getElementById('confirmPasswordConfirmBtn').click(); });
+
+    safeBind('accountEntryBtn', 'click', openAccountScreen);
+    safeBind('quickShopBtn', 'click', () => { renderLobbyShop(); document.getElementById('lobbyShopOverlay').classList.add('visible'); });
+    safeBind('quickLoadoutBtn', 'click', () => openLoadoutScreen(false));
+
+    safeBind('accountBackBtn', 'click', closeAccountScreen);
+    safeBind('saveCodeBtn', 'click', showSaveCode);
+    safeBind('accountExportFileBtn', 'click', exportAccountToFile);
+    safeBind('lobbyShopBtn2', 'click', () => { renderLobbyShop(); document.getElementById('lobbyShopOverlay').classList.add('visible'); });
+    safeBind('warehouseBtn2', 'click', () => { renderWarehousePopup(); document.getElementById('warehouseOverlay').classList.add('visible'); });
+    safeBind('accountResetBtn', 'click', function() {
+        if (!confirm('Are you sure you want to reset all account data? This cannot be undone!')) return;
+        accountData = createNewAccountData('', '000000');
+        const nameInput = document.getElementById('accountNameInput');
+        if (nameInput) nameInput.value = '';
+        localStorage.removeItem('td_account_data');
+        updateAccountUI(); updateLevelUI(); updateAchievementUI();
+        showToast('🔄 Account data reset');
+    });
+
+    safeBind('saveCodeCloseBtn', 'click', () => document.getElementById('saveCodeOverlay').classList.remove('visible'));
+    safeBind('saveCodeOverlay', 'click', function(e) { if (e.target === this) this.classList.remove('visible'); });
+    safeBind('copySaveCodeBtn', 'click', copySaveCode);
+    safeBind('downloadSaveCodeBtn', 'click', downloadSaveCode);
+
+    safeBind('lobbyShopBtn', 'click', () => { renderLobbyShop(); document.getElementById('lobbyShopOverlay').classList.add('visible'); });
+    safeBind('lobbyShopCloseBtn', 'click', () => document.getElementById('lobbyShopOverlay').classList.remove('visible'));
+    safeBind('lobbyShopOverlay', 'click', function(e) { if (e.target === this) this.classList.remove('visible'); });
+    safeBind('warehouseBtn', 'click', () => { renderWarehousePopup(); document.getElementById('warehouseOverlay').classList.add('visible'); });
+    safeBind('warehouseCloseBtn', 'click', () => document.getElementById('warehouseOverlay').classList.remove('visible'));
+    safeBind('warehouseOverlay', 'click', function(e) { if (e.target === this) this.classList.remove('visible'); });
+
+    safeBind('loadoutPageBackBtn', 'click', () => { pendingStartMap = null; closeLoadoutScreen(); mainMenu.classList.add('visible'); });
+    safeBind('loadoutPageShopBtn', 'click', () => { renderLobbyShop(); document.getElementById('lobbyShopOverlay').classList.add('visible'); });
+    safeBind('loadoutPageWarehouseBtn', 'click', () => { renderWarehousePopup(); document.getElementById('warehouseOverlay').classList.add('visible'); });
+    safeBind('loadoutPageStartBtn', 'click', () => {
+        if (!pendingStartMap) { closeLoadoutScreen(); mainMenu.classList.add('visible'); return; }
+        const mapData = pendingStartMap.mapData;
+        const isCustom = pendingStartMap.isCustom;
+        pendingStartMap = null;
+        closeLoadoutScreen();
+        startGame(mapData, isCustom);
+    });
+
+    safeBind('shopCategoryTabs', 'click', function(e) {
+        const btn = e.target.closest('.cat-btn');
+        if (!btn) return;
+        document.querySelectorAll('#shopCategoryTabs .cat-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        shopCategory = btn.dataset.cat;
+        renderLobbyShop();
+    });
+
+    safeBind('goldMinusBtn', 'click', () => setLoadoutGold((accountData.loadoutGold || 0) - 100));
+    safeBind('goldPlusBtn', 'click', () => setLoadoutGold((accountData.loadoutGold || 0) + 100));
+    safeBind('goldMaxBtn', 'click', () => setLoadoutGold(accountData.gold || 0));
+    safeBind('goldInput', 'change', function() { setLoadoutGold(this.value); });
+
+    safeBind('changePasswordBtn', 'click', function() {
+        const op = document.getElementById('oldPasswordInput'); if (op) op.value = '';
+        const np = document.getElementById('newPasswordInput'); if (np) np.value = '';
+        const cp = document.getElementById('confirmNewPasswordInput'); if (cp) cp.value = '';
+        const er = document.getElementById('changePasswordError'); if (er) er.textContent = '';
+        document.getElementById('changePasswordOverlay').classList.add('visible');
+    });
+    safeBind('changePasswordCloseBtn', 'click', () => document.getElementById('changePasswordOverlay').classList.remove('visible'));
+    safeBind('changePasswordCancelBtn', 'click', () => document.getElementById('changePasswordOverlay').classList.remove('visible'));
+    safeBind('changePasswordOverlay', 'click', function(e) { if (e.target === this) this.classList.remove('visible'); });
+    safeBind('changePasswordConfirmBtn', 'click', function() {
+        const oldPwd = document.getElementById('oldPasswordInput').value.trim();
+        const newPwd = document.getElementById('newPasswordInput').value.trim();
+        const confirmPwd = document.getElementById('confirmNewPasswordInput').value.trim();
+        const errEl = document.getElementById('changePasswordError');
+        const currentPwd = accountData.password || '000000';
+        if (!oldPwd) { errEl.textContent = '❌ Please enter current password'; return; }
+        if (oldPwd !== currentPwd) { errEl.textContent = '❌ Current password is incorrect'; return; }
+        if (!newPwd) { errEl.textContent = '❌ New password cannot be empty'; return; }
+        if (newPwd === currentPwd) { errEl.textContent = '❌ New password must differ from current'; return; }
+        if (newPwd !== confirmPwd) { errEl.textContent = '❌ Passwords do not match'; return; }
+        accountData.password = newPwd;
+        saveAccountLocal();
+        document.getElementById('changePasswordOverlay').classList.remove('visible');
+        showToast('✅ Password changed successfully!');
+    });
+
+    safeBind('accountNameInput', 'change', function() {
+        const newName = this.value.trim();
+        accountData.name = newName || 'Player';
+        if (newName && (accountData.level || 0) === 0) accountData.level = 1;
+        saveAccountLocal(); updateLevelUI(); updateAccountUI();
+    });
+
+    document.querySelectorAll('.map-card').forEach(card => {
+        if (card.dataset.map === 'custom') return;
+        card.addEventListener('click', function(e) {
+            if (e.target.classList.contains('map-detail-btn')) return;
+            const mapId = parseInt(this.dataset.map);
+            const mapData = MAPS[mapId];
+            if (mapData) openDetail(mapId, mapData, false);
+        });
+    });
+    document.querySelectorAll('.map-detail-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const card = this.closest('.map-card');
+            const mapId = card.dataset.map;
+            if (mapId === 'custom') { document.getElementById('editorPanel').classList.add('open'); initEditor(); return; }
+            const mapData = MAPS[parseInt(mapId)];
+            if (mapData) openDetail(parseInt(mapId), mapData, false);
+        });
+    });
+    safeBind('customEditBtn', 'click', function(e) { e.stopPropagation(); document.getElementById('editorPanel').classList.add('open'); initEditor(); });
+    safeBind('customMapCard', 'click', function(e) {
+        if (e.target.classList.contains('map-edit-btn')) return;
+        document.getElementById('editorPanel').classList.add('open');
+        initEditor();
+    });
+
+    safeBind('detailStartBtn', 'click', startFromDetail);
+    safeBind('detailCloseBtn', 'click', closeDetail);
+    safeBind('detailCloseBtn2', 'click', closeDetail);
+    safeBind('detailOverlay', 'click', function(e) { if (e.target === this) closeDetail(); });
+
+    safeBind('creativeCodeLoadBtn', 'click', function() {
+        const code = document.getElementById('creativeCodeInput').value.trim();
+        if (!code) { showToast('❌ Please enter a map code'); return; }
+        try {
+            const data = JSON.parse(decodeURIComponent(escape(atob(code))));
+            if (data && data.waypoints && data.waypoints.length >= 2) {
+                const info = document.getElementById('mapPreviewInfo');
+                if (info) { info.textContent = '✅ Loaded: ' + (data.name || 'Unnamed'); info.style.color = '#8acc9a'; }
+                openDetail('creative', data, true);
+            } else {
+                const info = document.getElementById('mapPreviewInfo');
+                if (info) { info.textContent = '❌ Invalid map code'; info.style.color = '#ff6644'; }
+            }
+        } catch(e) {
+            const info = document.getElementById('mapPreviewInfo');
+            if (info) { info.textContent = '❌ Invalid map code'; info.style.color = '#ff6644'; }
+        }
+    });
+
+    if (editorCanvas) {
+        editorCanvas.addEventListener('mousedown', (e) => {
+            const pos = getEditorGridPos(e);
+            if (!pos) return;
+            if (editorMode === 'path') addPathPoint(pos.x, pos.y); else erasePathPoint(pos.x, pos.y);
+        });
+    }
+    safeBind('editorModePath', 'click', () => { editorMode = 'path'; document.getElementById('editorModePath').classList.add('active'); document.getElementById('editorModeErase').classList.remove('active'); });
+    safeBind('editorModeErase', 'click', () => { editorMode = 'erase'; document.getElementById('editorModeErase').classList.add('active'); document.getElementById('editorModePath').classList.remove('active'); });
+    safeBind('editorClear', 'click', clearPath);
+    safeBind('editorUndo', 'click', undoPath);
+    safeBind('editorStartBtn', 'click', function() {
+        const customData = getCustomMapData();
+        if (!customData) { showToast('❌ Please draw a complete path first'); return; }
+        document.getElementById('editorPanel').classList.remove('open');
+        pendingStartMap = { mapData: customData, isCustom: true };
+        openLoadoutScreen(true);
+    });
+
+    safeBind('backBtn', 'click', function() {
+        if (game) {
+            if (!game.gameOver && game.wave > 0) settleGameRewards(game);
+            else if (game.wave > 0) recordGameStats(game.mapId, game.wave, game.medals, { kills: game.totalKills || 0, bossKills: game.totalBossKills || 0, bigBossKills: game.totalBigBossKills || 0, towersBuilt: game.totalTowersBuilt || 0, cardsUsed: game.totalCardsUsed || 0, medaledTowers: game.totalMedaledTowers || 0 });
+            game.destroy();
+            game = null;
+        }
+        gameWrapper.style.display = 'none';
+        mainMenu.classList.add('visible');
+    });
+
+    safeBind('autoWaveBtn', 'click', function() {
+        autoWaveEnabled = !autoWaveEnabled;
+        this.textContent = autoWaveEnabled ? '⏸️ Manual Wave' : '▶️ Auto Wave';
+        this.style.background = autoWaveEnabled ? '#2a4a2a' : '#4a3a2a';
+        if (game) {
+            game.autoWaveEnabled = autoWaveEnabled;
+            if (autoWaveEnabled && !game.waveInProgress && game.waveCooldown <= 0 && !game.gameOver) game.startWave();
+        }
+        showToast(autoWaveEnabled ? '▶️ Auto next wave enabled' : '⏸️ Manual next wave enabled');
+    });
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeDetail();
+            const sc = document.getElementById('saveCodeOverlay'); if (sc) sc.classList.remove('visible');
+        }
+    });
+
+    setupDragDrop();
+}
+
+function showPasswordConfirmPanel(data) {
+    document.getElementById('siName').textContent = data.name || 'Unknown';
+    document.getElementById('siLevel').textContent = 'Lv.' + (data.level || 0);
+    document.getElementById('siGold').textContent = '💰 ' + (data.gold || 0);
+    document.getElementById('siMedals').textContent = '🏅 ' + (data.totalMedals || 0);
+    document.getElementById('confirmPasswordInput').value = '';
+    document.getElementById('confirmPasswordError').textContent = '';
+    document.getElementById('passwordConfirmOverlay').classList.add('visible');
+}
+
+function handleSaveFile(file) {
+    const errEl = document.getElementById('fileLoginError');
+    if (file.size > 5 * 1024 * 1024) { errEl.textContent = '❌ File too large (max 5MB)'; return; }
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const data = JSON.parse(e.target.result);
+            if (!data || typeof data !== 'object' || (!data.name && !data.password)) { errEl.textContent = '❌ Invalid save file format'; return; }
+            pendingSaveData = data;
+            showPasswordConfirmPanel(data);
+            document.getElementById('fileLoginOverlay').classList.remove('visible');
+            errEl.textContent = '';
+        } catch(err) { errEl.textContent = '❌ Failed to parse save file'; }
+    };
+    reader.onerror = function() { errEl.textContent = '❌ Failed to read file'; };
+    reader.readAsText(file);
+}
+
+try {
+    loadAccountLocal();
+    setupAllEventListeners();
+    initEditor();
+    const nameEl = document.getElementById('accountNameInput');
+    if (nameEl) nameEl.value = accountData.name || '';
+    updateAccountUI();
+    updateLevelUI();
+    updateAchievementUI();
+
+    setTimeout(() => {
+        const sp = document.getElementById('splashScreen');
+        const wc = document.getElementById('welcomeScreen');
+        if (sp) {
+            sp.classList.add('hidden');
+            setTimeout(() => {
+                sp.style.display = 'none';
+                if (wc) wc.classList.add('visible');
+            }, 800);
+        }
+    }, 2000);
+
+    setTimeout(() => {
+        const sp = document.getElementById('splashScreen');
+        const wc = document.getElementById('welcomeScreen');
+        if (sp && sp.style.display !== 'none') {
+            sp.style.display = 'none';
+            if (wc) wc.classList.add('visible');
+        }
+    }, 3500);
+} catch(e) {
+    console.error('Startup failed:', e);
+    const sp = document.getElementById('splashScreen');
+    const wc = document.getElementById('welcomeScreen');
+    if (sp) sp.style.display = 'none';
+    if (wc) wc.classList.add('visible');
+}
+
+})();
+</script>
+</body>
+</html>
